@@ -46,24 +46,9 @@
   .right{min-width:320px}
   .top-raters .rater{display:flex;align-items:center;gap:10px;padding:8px;border-radius:8px}
   .avatar{width:44px;height:44px;border-radius:8px;background:linear-gradient(135deg,#111827,#0b1220);display:inline-grid;place-items:center;font-weight:800;color:var(--muted)}
-  footer {
-  grid-column: 1 / -1;
-  text-align: center;
-  margin-top: 40px;
-  padding: 20px 0;
-  color: var(--muted);
-  font-size: 13px;
-  background: linear-gradient(180deg, transparent, rgba(0,0,0,0.25));
-}
+  footer{grid-column:1 / -1;text-align:center;margin-top:12px;color:var(--muted);font-size:13px}
   .badge{background:rgba(255,255,255,0.06);padding:4px 8px;border-radius:999px;font-weight:700;font-size:12px;color:#d9f7ff}
   @media (max-width:980px){.wrap{grid-template-columns:1fr;padding:12px}.right{order:3}}
-
-  #reviewsList {
-  margin-top:8px;
-  display:flex;
-  flex-direction:column;
-  gap:6px;
-}
 </style>
 </head>
 <body>
@@ -118,43 +103,41 @@
       </div>
 
       <div class="movie-list" id="movieList" aria-live="polite"></div>
-
-      <div class="card" id="selectedCard" aria-hidden="true" style="display:none">
-  <strong id="selectedTitle">Selected</strong>
-  <div class="small" id="selectedSubtitle">Movie info</div>
-  <div style="height:12px"></div>
-
-  <div id="reviewsList"></div>
-  <div style="height:12px"></div>
-
-  <button id="toggleReviewPanel" class="ghost">✏️ Write a Review</button>
-
-  <div id="reviewPanel" style="display:none;margin-top:12px">
-    <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px">
-      <div class="small">Your rating:</div>
-      <div id="ratingStars" class="stars" role="radiogroup" aria-label="Rating stars"></div>
-      <div style="flex:1"></div>
-      <button id="submitRatingBtn">Submit</button>
-    </div>
-
-    <textarea id="comment" placeholder="Optional comment (public)"></textarea>
-  </div>
-
-  <div style="height:12px"></div>
-
-  <div style="display:flex;gap:12px;align-items:center">
-    <div><div class="avg" id="avgScore">—</div> <div class="small">avg</div></div>
-    <div class="small" id="ratingCount">— ratings</div>
-    <div style="flex:1"></div>
-    <button id="deleteMovie" class="ghost">Delete movie (admin)</button>
-  </div>
-
-  <div style="height:12px"></div>
-  <div id="breakdown" class="small"></div>
-</div>
     </div>
 
     <div style="height:12px"></div>
+
+    <div class="card" id="selectedCard" aria-hidden="true" style="display:none">
+      <strong id="selectedTitle">Selected</strong>
+      <div class="small" id="selectedSubtitle">Movie info</div>
+      <div style="height:12px"></div>
+
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
+        <div class="small">Signed in as:</div>
+        <div id="signedInAs" class="pill" style="padding:6px 10px;background:rgba(255,255,255,0.03);border-radius:999px"></div>
+      </div>
+
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px">
+        <div class="small">Your rating:</div>
+        <div id="ratingStars" class="stars" role="radiogroup" aria-label="Rating stars"></div>
+        <div style="flex:1"></div>
+        <button id="submitRatingBtn">Submit</button>
+      </div>
+
+      <textarea id="comment" placeholder="Optional comment (public)"></textarea>
+
+      <div style="height:12px"></div>
+
+      <div style="display:flex;gap:12px;align-items:center">
+        <div><div class="avg" id="avgScore">—</div> <div class="small">avg</div></div>
+        <div class="small" id="ratingCount">— ratings</div>
+        <div style="flex:1"></div>
+        <button id="deleteMovie" class="ghost">Delete movie (admin)</button>
+      </div>
+
+      <div style="height:12px"></div>
+      <div id="breakdown" class="small"></div>
+    </div>
   </main>
 
   <!-- Right column -->
@@ -264,15 +247,6 @@ const refs = {
   topRaters: document.getElementById('topRaters'),
   signedInAs: document.getElementById('signedInAs'),
 };
-
-const reviewPanel = document.getElementById('reviewPanel');
-const toggleReviewPanel = document.getElementById('toggleReviewPanel');
-
-toggleReviewPanel.addEventListener('click', () => {
-  const isOpen = reviewPanel.style.display === 'block';
-  reviewPanel.style.display = isOpen ? 'none' : 'block';
-  toggleReviewPanel.textContent = isOpen ? '✏️ Write a Review' : '⬆️ Hide Review Form';
-});
 
 /* -------------------------
    App state
@@ -482,172 +456,40 @@ async function renderMovieList(movieArr) {
   }
 }
 
-let openMovieId = null; // Track which movie is open
-
 /* Select movie */
 async function selectMovie(id) {
-  if (openMovieId === id) {
-    // Clicking the same movie closes it
-    document.querySelectorAll('.selected-insert').forEach(e => e.remove());
-    openMovieId = null;
-    return;
-  }
-  openMovieId = id;
-
-  // Clear other open cards
-  document.querySelectorAll('.selected-insert').forEach(e => e.remove());
-
+  selectedMovieId = id;
   const snap = await get(movieRef(id));
   const m = snap.val();
   if (!m) return;
 
-  const clickedMovie = Array.from(refs.movieList.children)
-    .find(el => el.querySelector('.movie-title')?.textContent?.includes(m.title));
-  if (!clickedMovie) return;
+  refs.selectedCard.style.display = '';
+  refs.selectedCard.setAttribute('aria-hidden', 'false');
+  refs.selectedTitle.textContent = m.title + (m.year ? ' (' + m.year + ')' : '');
+  refs.selectedSubtitle.textContent = 'Added ' + new Date(m.createdAt).toLocaleString();
 
-  const card = document.createElement('div');
-  card.className = 'card selected-insert';
-  card.innerHTML = `
-    <strong>${escapeHtml(m.title)} ${m.year ? '(' + escapeHtml(m.year) + ')' : ''}</strong>
-    <div class="small">Added ${new Date(m.createdAt).toLocaleString()}</div>
-    <div style="height:12px"></div>
-    <div id="reviewsList"></div>
-    <div style="height:12px"></div>
-    <button id="toggleReviewPanel" class="ghost">✏️ Write a Review</button>
-    <div id="reviewPanel" style="display:none;margin-top:12px">
-      <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px">
-        <div class="small">Your rating:</div>
-        <div id="ratingStars" class="stars"></div>
-        <div style="flex:1"></div>
-        <button id="submitRatingBtn">Submit</button>
-      </div>
-      <textarea id="comment" placeholder="Optional comment (public)"></textarea>
-    </div>
-    <div style="height:12px"></div>
-    <div style="display:flex;gap:12px;align-items:center">
-      <div><div class="avg" id="avgScore">—</div><div class="small">avg</div></div>
-      <div class="small" id="ratingCount">— ratings</div>
-      <div style="flex:1"></div>
-      <button id="deleteMovie" class="ghost">Delete movie (admin)</button>
-    </div>
-    <div style="height:12px"></div>
-    <div id="breakdown" class="small"></div>
-  `;
-  clickedMovie.insertAdjacentElement('afterend', card);
-
-  const reviewPanel = card.querySelector('#reviewPanel');
-  const toggleReviewPanel = card.querySelector('#toggleReviewPanel');
-  const submitRatingBtn = card.querySelector('#submitRatingBtn');
-  const deleteMovieBtn = card.querySelector('#deleteMovie');
-  const ratingStars = card.querySelector('#ratingStars');
-  const commentBox = card.querySelector('#comment');
-  const avgScore = card.querySelector('#avgScore');
-  const ratingCount = card.querySelector('#ratingCount');
-  const breakdown = card.querySelector('#breakdown');
-  const reviewsList = card.querySelector('#reviewsList');
-
-  toggleReviewPanel.addEventListener('click', () => {
-    const open = reviewPanel.style.display === 'block';
-    reviewPanel.style.display = open ? 'none' : 'block';
-    toggleReviewPanel.textContent = open ? '✏️ Write a Review' : '⬆️ Hide Review Form';
-  });
-
-  // Generate rating stars
-  renderStars(ratingStars, 10);
-
-  submitRatingBtn.addEventListener('click', async () => {
-    if (!currentUser) return alert('Sign in first.');
-    const score = pendingRating;
-    const comment = commentBox.value.trim();
-    const verified = await checkVerified(currentUser);
-
-    const ratingsSnap = await get(ratingsRoot(id));
-    const ratings = ratingsSnap.val() || {};
-
-    // Check if this user already rated
-    const existingKey = Object.keys(ratings).find(
-      key => ratings[key].uid === currentUser.uid
-    );
-
-    if (existingKey) {
-      // Update existing rating
-      const rRef = ref(db, `ratings/${id}/${existingKey}`);
-      await update(rRef, { score, comment, updatedAt: nowISO() });
-    } else {
-      // Create new rating
-      const rRef = push(ratingsRoot(id));
-      await set(rRef, {
-        uid: currentUser.uid,
-        displayName: currentUser.displayName,
-        email: currentUser.email,
-        score,
-        comment,
-        verified,
-        createdAt: nowISO()
-      });
-    }
-
-    commentBox.value = '';
-    reviewPanel.style.display = 'none';
-    toggleReviewPanel.textContent = '✏️ Write a Review';
-  });
-
-  deleteMovieBtn.addEventListener('click', async () => {
-    if (!currentUser) return alert('Sign in as admin to delete.');
-    const verified = await checkVerified(currentUser);
-    if (!verified) return alert('Only verified admins can delete movies.');
-    if (!confirm('Delete this movie and all ratings?')) return;
-    await remove(movieRef(id));
-    await remove(ratingsRoot(id));
-    card.remove();
-    openMovieId = null;
-  });
-
-  // Render and update stats
-  const ratingsSnap = await get(ratingsRoot(id));
-  updateSelectedStats(id, ratingsSnap.val(), avgScore, ratingCount, breakdown, reviewsList);
   attachRatingsListener(id);
-}
 
-function renderStars(container, total = 10) {
-  container.innerHTML = '';
-  for (let i = 1; i <= total; i++) {
-    const s = document.createElement('div');
-    s.className = 'star';
-    s.textContent = i;
-    s.addEventListener('click', () => {
-      pendingRating = i;
-      container.querySelectorAll('.star').forEach(st => st.classList.remove('on'));
-      for (let j = 1; j <= i; j++) container.children[j - 1].classList.add('on');
-    });
-    container.appendChild(s);
+  // ⬇️ Fetch existing ratings
+  const ratingsSnap = await get(ratingsRoot(id));
+
+  // ✅ PREVENT DUPLICATE RATINGS HERE
+  const ratings = ratingsSnap.val() || {};
+  const existing = Object.values(ratings).find(r => r.uid === currentUser?.uid);
+
+  if (existing) {
+    pendingRating = existing.score;
+    refs.comment.value = existing.comment || '';
+  } else {
+    pendingRating = 8; // default
+    refs.comment.value = '';
   }
-}
 
-function updateSelectedStats(movieId, ratingsVal, avgScoreEl, ratingCountEl, breakdownEl, reviewsListEl) {
-  const vals = Object.values(ratingsVal || {});
-  const scores = vals.map(r => r.score || 0);
-  const avg = scores.length ? (scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(2) : '—';
-  avgScoreEl.textContent = avg;
-  ratingCountEl.textContent = `${scores.length} ratings`;
+  // Re-render stars showing either existing rating or default
+  renderStars(refs.ratingStars, v => pendingRating = v, pendingRating);
 
-  const breakdown = {};
-  for (let i = 1; i <= 10; i++) breakdown[i] = 0;
-  vals.forEach(r => breakdown[r.score]++);
-  breakdownEl.innerHTML = Object.entries(breakdown)
-    .filter(([k, v]) => v > 0)
-    .map(([k, v]) => `${k}⭐ × ${v}`)
-    .join(', ') || 'No ratings yet.';
-
-  reviewsListEl.innerHTML = vals
-    .map(r => `
-      <div class="small">
-        <strong>${escapeHtml(r.displayName || 'Anonymous')}</strong>
-        — ${r.score}/10 ${r.verified ? '✔️' : ''}
-        ${r.comment ? '<br>' + escapeHtml(r.comment) : ''}
-      </div>
-    `)
-    .join('');
+  // Finally update stats
+  updateSelectedStats(id, ratingsSnap.val());
 }
 
 /* Stars widget */
@@ -686,28 +528,6 @@ function updateSelectedStats(movieId, ratingsVal) {
   }
   html += '</div>';
   refs.breakdown.innerHTML = html;
-
-  // Show all reviews with comments
-const listEl = document.getElementById('reviewsList');
-if (!ratingsVal || Object.keys(ratingsVal).length === 0) {
-  listEl.innerHTML = '<div class="small" style="opacity:0.7">No reviews yet — be the first to write one!</div>';
-  return;
-}
-let htmlReviews = '';
-const sorted = Object.values(ratingsVal).sort((a,b)=> new Date(b.createdAt) - new Date(a.createdAt));
-for (const r of sorted) {
-  htmlReviews += `
-    <div style="margin-bottom:10px;padding:10px;border-radius:10px;background:rgba(255,255,255,0.03)">
-      <div style="display:flex;justify-content:space-between;align-items:center">
-        <strong>${escapeHtml(r.displayName || r.email || 'Anonymous')}</strong>
-        <span class="badge">${r.score}/10</span>
-      </div>
-      ${r.comment ? `<div class="small" style="margin-top:4px;opacity:0.85">${escapeHtml(r.comment)}</div>` : ''}
-      <div class="small" style="margin-top:4px;opacity:0.6">${new Date(r.createdAt).toLocaleString()}</div>
-    </div>
-  `;
-}
-listEl.innerHTML = htmlReviews;
 }
 
 /* Submit rating — update if existing */
