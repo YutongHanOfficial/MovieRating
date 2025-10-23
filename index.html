@@ -185,7 +185,7 @@
    ============================ */
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
-import { getDatabase, ref, push, set, onValue, child, get, remove, query, orderByChild, limitToLast } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-database.js";
+import { getDatabase, ref, push, set, onValue, child, get, remove, query, orderByChild, limitToLast, update } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-database.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
 
 /* -------------------------
@@ -462,16 +462,33 @@ async function selectMovie(id) {
   const snap = await get(movieRef(id));
   const m = snap.val();
   if (!m) return;
+
   refs.selectedCard.style.display = '';
   refs.selectedCard.setAttribute('aria-hidden', 'false');
   refs.selectedTitle.textContent = m.title + (m.year ? ' (' + m.year + ')' : '');
   refs.selectedSubtitle.textContent = 'Added ' + new Date(m.createdAt).toLocaleString();
-  // attach ratings listener (ensures UI updates)
+
   attachRatingsListener(id);
-  // render stars widget
-  renderStars(refs.ratingStars, (v) => { pendingRating = v; }, pendingRating );
-  // Update stats by fetching current ratings snapshot
+
+  // ⬇️ Fetch existing ratings
   const ratingsSnap = await get(ratingsRoot(id));
+
+  // ✅ PREVENT DUPLICATE RATINGS HERE
+  const ratings = ratingsSnap.val() || {};
+  const existing = Object.values(ratings).find(r => r.uid === currentUser?.uid);
+
+  if (existing) {
+    pendingRating = existing.score;
+    refs.comment.value = existing.comment || '';
+  } else {
+    pendingRating = 8; // default
+    refs.comment.value = '';
+  }
+
+  // Re-render stars showing either existing rating or default
+  renderStars(refs.ratingStars, v => pendingRating = v, pendingRating);
+
+  // Finally update stats
   updateSelectedStats(id, ratingsSnap.val());
 }
 
