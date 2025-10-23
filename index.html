@@ -513,32 +513,58 @@ function updateSelectedStats(movieId, ratingsVal) {
   refs.breakdown.innerHTML = html;
 }
 
-/* Submit rating */
+/* Submit rating — update if existing */
 refs.submitRatingBtn.addEventListener('click', async () => {
   if (!currentUser) return alert('Please sign in first.');
   if (!selectedMovieId) return alert('Please select a movie.');
-  if (!pendingRating || pendingRating < 1 || pendingRating > 10) return alert('Choose a rating between 1 and 10.');
+  if (!pendingRating || pendingRating < 1 || pendingRating > 10)
+    return alert('Select a rating between 1–10.');
+
   const comment = refs.comment.value.trim();
-  const uid = currentUser.uid;
-  const display = currentUser.displayName || currentUser.email || uid;
-  const email = currentUser.email || '';
-  const verified = await checkVerified(currentUser);
-
-  // push rating
   const ratingsRef = ratingsRoot(selectedMovieId);
-  const newId = push(ratingsRef).key;
-  // write rating node
-  await set(ref(db, `ratings/${selectedMovieId}/${newId}`), {
-    uid, displayName: display, email, score: pendingRating, comment, createdAt: nowISO(), verified: !!verified
-  });
 
-  // increment rater index (atomic-like: read then set)
-  const rInf = await get(raterIndexRef(uid));
-  const prev = rInf.exists() ? (rInf.val().count || 0) : 0;
-  await set(raterIndexRef(uid), { displayName: display, email: email, count: prev + 1 });
+  // 1️⃣ Get existing ratings for this movie
+  const snapshot = await get(ratingsRef);
+  const ratings = snapshot.val() || {};
+  const existingKey = Object.keys(ratings).find(
+    k => ratings[k].uid === currentUser.uid
+  );
+
+  // 2️⃣ Prepare new/updated rating data
+  const verified = await checkVerified(currentUser);
+  const ratingData = {
+    uid: currentUser.uid,
+    displayName: currentUser.displayName || currentUser.email || currentUser.uid,
+    email: currentUser.email || '',
+    score: pendingRating,
+    comment,
+    createdAt: nowISO(),
+    verified
+  };
+
+  if (existingKey) {
+    // 🔁 Update existing rating instead of blocking
+    await update(child(ratingsRef, existingKey), ratingData);
+    alert('Your previous rating has been updated!');
+  } else {
+    // 🆕 New rating
+    const ratingId = uid();
+    await set(child(ratingsRef, ratingId), ratingData);
+
+    // 3️⃣ Update rater index count (only on first rating for a movie)
+    const rIndexRef = raterIndexRef(currentUser.uid);
+    const rIndexSnap = await get(rIndexRef);
+    const oldCount = (rIndexSnap.val() && rIndexSnap.val().count) || 0;
+    await set(rIndexRef, {
+      displayName: currentUser.displayName || currentUser.email || currentUser.uid,
+      email: currentUser.email || '',
+      count: oldCount + 1
+    });
+
+    alert('Your rating has been submitted!');
+  }
 
   refs.comment.value = '';
-  alert('Rating submitted. Thank you!');
 });
 
 /* Top raters: compute from raterIndex node */
