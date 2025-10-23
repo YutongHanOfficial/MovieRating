@@ -481,7 +481,7 @@ async function selectMovie(id) {
     pendingRating = existing.score;
     refs.comment.value = existing.comment || '';
   } else {
-    pendingRating = 8; // default
+    pendingRating = 0; // default
     refs.comment.value = '';
   }
 
