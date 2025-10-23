@@ -489,14 +489,15 @@ async function selectMovie(id) {
   const m = snap.val();
   if (!m) return;
 
-  // Remove any previous selected card placement
+  // Remove any existing selected insert
   document.querySelectorAll('.selected-insert').forEach(e => e.remove());
 
-  // Find the clicked movie’s DOM element
+  // Find clicked movie row
   const clickedMovie = Array.from(refs.movieList.children)
     .find(el => el.querySelector('.movie-title')?.textContent?.includes(m.title));
+  if (!clickedMovie) return;
 
-  // Create a new card element to inject below it
+  // Create card element
   const card = document.createElement('div');
   card.className = 'card selected-insert';
   card.innerHTML = `
@@ -509,7 +510,7 @@ async function selectMovie(id) {
     <div id="reviewPanel" style="display:none;margin-top:12px">
       <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px">
         <div class="small">Your rating:</div>
-        <div id="ratingStars" class="stars" role="radiogroup" aria-label="Rating stars"></div>
+        <div id="ratingStars" class="stars" role="radiogroup"></div>
         <div style="flex:1"></div>
         <button id="submitRatingBtn">Submit</button>
       </div>
@@ -527,33 +528,82 @@ async function selectMovie(id) {
   `;
   clickedMovie.insertAdjacentElement('afterend', card);
 
-  // Update refs to new dynamically inserted elements
-  refs.ratingStars = card.querySelector('#ratingStars');
-  refs.comment = card.querySelector('#comment');
-  refs.avgScore = card.querySelector('#avgScore');
-  refs.ratingCount = card.querySelector('#ratingCount');
-  refs.breakdown = card.querySelector('#breakdown');
-  refs.deleteMovieBtn = card.querySelector('#deleteMovie');
+  // Rebind new DOM references for this card
   const reviewPanel = card.querySelector('#reviewPanel');
   const toggleReviewPanel = card.querySelector('#toggleReviewPanel');
   const submitRatingBtn = card.querySelector('#submitRatingBtn');
+  const deleteMovieBtn = card.querySelector('#deleteMovie');
+  const ratingStars = card.querySelector('#ratingStars');
+  const commentBox = card.querySelector('#comment');
+  const avgScore = card.querySelector('#avgScore');
+  const ratingCount = card.querySelector('#ratingCount');
+  const breakdown = card.querySelector('#breakdown');
 
+  // Review panel toggle
   toggleReviewPanel.addEventListener('click', () => {
     const isOpen = reviewPanel.style.display === 'block';
     reviewPanel.style.display = isOpen ? 'none' : 'block';
     toggleReviewPanel.textContent = isOpen ? '✏️ Write a Review' : '⬆️ Hide Review Form';
   });
 
-  attachRatingsListener(id);
+  // Draw 10 clickable stars
+  ratingStars.innerHTML = '';
+  for (let i = 1; i <= 10; i++) {
+    const s = document.createElement('div');
+    s.textContent = i;
+    s.className = 'star';
+    s.addEventListener('click', () => {
+      pendingRating = i;
+      [...ratingStars.children].forEach((c, j) => {
+        c.classList.toggle('on', j < i);
+      });
+    });
+    ratingStars.appendChild(s);
+  }
 
+  // Submit rating
+  submitRatingBtn.addEventListener('click', async () => {
+    if (!currentUser) return alert('Please sign in first.');
+    const comment = commentBox.value.trim();
+    const score = pendingRating || 0;
+    if (score < 1 || score > 10) return alert('Please select a rating from 1–10.');
+
+    const verified = await checkVerified(currentUser);
+    const rRef = ratingsRoot(id);
+    const existingSnap = await get(rRef);
+    const ratings = existingSnap.val() || {};
+    // Prevent duplicate rating by same user
+    const alreadyRated = Object.values(ratings).some(r => r.uid === currentUser.uid);
+    if (alreadyRated) return alert('You have already rated this movie.');
+
+    const newId = uid();
+    await set(child(rRef, newId), {
+      uid: currentUser.uid,
+      displayName: currentUser.displayName || currentUser.email,
+      email: currentUser.email,
+      score,
+      comment,
+      createdAt: nowISO(),
+      verified,
+    });
+    commentBox.value = '';
+  });
+
+  // Delete movie
+  deleteMovieBtn.addEventListener('click', async () => {
+    if (!currentUser) return alert('Sign in as an admin to delete.');
+    const verified = await checkVerified(currentUser);
+    if (!verified) return alert('Only verified admins can delete.');
+    if (!confirm('Delete movie and all ratings?')) return;
+    await remove(movieRef(id));
+    await remove(ratingsRoot(id));
+    card.remove();
+  });
+
+  // Load ratings and update stats
   const ratingsSnap = await get(ratingsRoot(id));
-  const ratings = ratingsSnap.val() || {};
-  const existing = Object.values(ratings).find(r => r.uid === currentUser?.uid);
-
-  pendingRating = existing ? existing.score : 8;
-  refs.comment.value = existing ? existing.comment || '' : '';
-  renderStars(refs.ratingStars, v => pendingRating = v, pendingRating);
-  updateSelectedStats(id, ratings);
+  updateSelectedStats(id, ratingsSnap.val(), { avgScore, ratingCount, breakdown });
+  attachRatingsListener(id);
 }
 
 /* Stars widget */
