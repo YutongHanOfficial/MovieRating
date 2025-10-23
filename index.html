@@ -3,89 +3,83 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>CriticLane — Verified Movie Ratings</title>
-<meta name="description" content="CriticLane — verified raters add movie ratings. Static site for GitHub Pages." />
+<title>MovieRatings — Verified Movie Ratings</title>
+<meta name="description" content="MovieRatings — verified user movie rating platform (Firebase + GitHub Pages)" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
 <style>
-  /* Minimal, modern styles (single file) */
   :root{
-    --bg:#0f1724; --card:#0b1220; --muted:#9aa7b2; --accent:#06b6d4;
-    --glass: rgba(255,255,255,0.03);
-    --radius:14px;
-    font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    --bg: #0b1220; --card:#0f1724; --muted:#9aa7b2; --accent:#06b6d4; --accent-2:#8b5cf6;
+    --glass: rgba(255,255,255,0.03); --radius:14px;
+    --success: #00c48c; --danger:#ff6b6b;
     color-scheme: dark;
   }
   *{box-sizing:border-box}
-  html,body{height:100%}
-  body{
-    margin:0; padding:28px;
-    background: linear-gradient(180deg,#071026 0%, #06121a 60%);
-    color:#e6eef6; -webkit-font-smoothing:antialiased;
-    line-height:1.4;
-  }
-  .container{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:1fr 380px;gap:24px;}
-  header{grid-column:1 / -1; display:flex;align-items:center;justify-content:space-between;gap:16px}
-  h1{margin:0;font-size:20px;letter-spacing:0.2px}
-  .brand{display:flex;align-items:center;gap:12px}
-  .logo{width:44px;height:44px;border-radius:10px;background:linear-gradient(135deg,var(--accent),#8b5cf6);display:flex;align-items:center;justify-content:center;font-weight:700}
-  .card{background:linear-gradient(180deg,var(--card), rgba(255,255,255,0.02));border-radius:var(--radius);padding:18px;box-shadow: 0 6px 18px rgba(2,6,23,0.6);border:1px solid rgba(255,255,255,0.03)}
-  /* left column */
+  html,body{height:100%;margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;color:#e6eef6;background:
+    radial-gradient(1200px 600px at 10% 10%, rgba(8,20,34,0.6), transparent),
+    linear-gradient(180deg,#071026 0%, #06121a 60%);}
+  .wrap{max-width:1100px;margin:28px auto;padding:20px;display:grid;grid-template-columns:1fr 360px;gap:20px}
+  header{grid-column:1 / -1;display:flex;align-items:center;justify-content:space-between;padding-bottom:8px}
+  .brand{display:flex;gap:12px;align-items:center}
+  .logo{width:48px;height:48px;border-radius:12px;background:linear-gradient(135deg,var(--accent),var(--accent-2));display:grid;place-items:center;font-weight:800;color:#012;box-shadow:0 6px 18px rgba(3,6,23,0.6)}
+  h1{margin:0;font-size:18px}
+  .top-actions{display:flex;gap:8px;align-items:center}
+  button{cursor:pointer;border-radius:10px;border:none;padding:8px 12px;background:var(--accent);color:#042027;font-weight:700}
+  button.ghost{background:transparent;color:var(--muted);border:1px solid rgba(255,255,255,0.04)}
+  .card{background:linear-gradient(180deg,var(--card), rgba(255,255,255,0.02));border-radius:var(--radius);padding:16px;box-shadow:0 8px 24px rgba(2,6,23,0.65);border:1px solid rgba(255,255,255,0.03)}
   .left{min-height:60vh}
-  .controls{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
-  input[type="text"], input[type="search"], select{
-    background:var(--glass); border:1px solid rgba(255,255,255,0.04); color:inherit;
-    padding:10px 12px;border-radius:10px;outline:none;min-width:0;
-  }
-  button{background:var(--accent); border:none; color:#042027; padding:9px 12px;border-radius:10px;font-weight:600;cursor:pointer}
-  button.ghost{background:transparent;border:1px solid rgba(255,255,255,0.06); color:var(--muted)}
-  .movie-list{display:grid;gap:12px}
-  .movie-row{display:flex;gap:12px;align-items:center;padding:12px;border-radius:10px;background:linear-gradient(180deg, rgba(255,255,255,0.01), transparent)}
-  .poster{width:72px;height:100px;border-radius:8px;background:linear-gradient(180deg,#0b1220,#071026);display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--muted)}
-  .meta{flex:1;display:flex;flex-direction:column;gap:6px}
-  .title-row{display:flex;align-items:center;gap:8px}
+  .controls{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+  input[type="text"], input[type="search"], select, textarea{background:var(--glass);border:1px solid rgba(255,255,255,0.04);color:inherit;padding:10px;border-radius:10px;outline:none}
+  textarea{min-height:84px;resize:vertical}
+  .movie-list{display:grid;gap:12px;margin-top:10px}
+  .movie-row{display:flex;gap:12px;align-items:center;padding:12px;border-radius:10px;background:linear-gradient(180deg, rgba(255,255,255,0.01), transparent);cursor:pointer}
+  .poster{width:72px;height:104px;border-radius:8px;background:linear-gradient(180deg,#071026,#0b1220);display:flex;align-items:center;justify-content:center;font-weight:800;color:var(--muted);font-size:20px}
+  .meta{flex:1;display:flex;flex-direction:column}
+  .title-row{display:flex;justify-content:space-between;align-items:center;gap:8px}
   .movie-title{font-size:16px;margin:0}
   .small{font-size:13px;color:var(--muted)}
-  .badge{background:rgba(255,255,255,0.06);padding:4px 8px;border-radius:999px;font-weight:600;font-size:12px}
   .rating-block{display:flex;gap:8px;align-items:center}
-  .stars{display:flex;gap:4px}
-  .star{width:20px;height:20px;display:inline-grid;place-items:center;border-radius:4px;cursor:pointer;user-select:none}
-  .star:hover{transform:scale(1.05)}
   .avg{font-weight:800;font-size:18px}
+  .stars{display:flex;gap:6px;align-items:center}
+  .star{width:26px;height:26px;display:inline-grid;place-items:center;border-radius:6px;cursor:pointer;user-select:none}
+  .star.on{background:linear-gradient(180deg,var(--accent),#07a3b5);color:#012}
   .right{min-width:320px}
-  .form-row{display:flex;gap:8px;align-items:center}
-  footer{grid-column:1 / -1;margin-top:18px;text-align:center;color:var(--muted);font-size:13px}
-  .top-raters{display:flex;flex-direction:column;gap:8px}
-  .rater{display:flex;align-items:center;gap:8px}
-  .rater .avatar{width:36px;height:36px;border-radius:8px;background:linear-gradient(135deg,#111827,#0b1220);display:inline-grid;place-items:center;font-weight:700}
-  .pill{background:rgba(255,255,255,0.03);padding:6px 10px;border-radius:999px;font-weight:600}
-  pre.small{white-space:pre-wrap;font-size:12px;color:var(--muted);background:transparent;border-radius:8px;padding:8px;border:1px dashed rgba(255,255,255,0.03)}
-  @media (max-width:980px){
-    .container{grid-template-columns:1fr; padding:12px}
-    .right{order:3}
-  }
+  .top-raters .rater{display:flex;align-items:center;gap:10px;padding:8px;border-radius:8px}
+  .avatar{width:44px;height:44px;border-radius:8px;background:linear-gradient(135deg,#111827,#0b1220);display:inline-grid;place-items:center;font-weight:800;color:var(--muted)}
+  footer{grid-column:1 / -1;text-align:center;margin-top:12px;color:var(--muted);font-size:13px}
+  .badge{background:rgba(255,255,255,0.06);padding:4px 8px;border-radius:999px;font-weight:700;font-size:12px;color:#d9f7ff}
+  @media (max-width:980px){.wrap{grid-template-columns:1fr;padding:12px}.right{order:3}}
 </style>
 </head>
 <body>
-<div class="container" id="app">
+<div class="wrap" id="app">
   <header>
     <div class="brand">
-      <div class="logo">CL</div>
+      <div class="logo">MR</div>
       <div>
-        <h1>CriticLane</h1>
-        <div class="small">Verified movie ratings — static & GitHub-friendly</div>
+        <h1>MovieRatings</h1>
+        <div class="small">Verified movie ratings — Firebase-powered</div>
       </div>
     </div>
-    <div style="display:flex;gap:8px;align-items:center">
-      <button id="exportJson" class="ghost" title="Export all data">Export JSON</button>
-      <button id="importJson" class="ghost" title="Import data">Import</button>
+
+    <div class="top-actions">
+      <div id="signedOutControls">
+        <button id="signInBtn">Sign in with Google</button>
+      </div>
+      <div id="signedInControls" style="display:none;align-items:center;gap:8px">
+        <div class="small" id="userName">—</div>
+        <div id="verifiedBadge"></div>
+        <button id="signOutBtn" class="ghost">Sign out</button>
+      </div>
     </div>
   </header>
 
-  <!-- Left: movie list + add -->
+  <!-- Left column -->
   <main class="left">
     <div class="card">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
         <strong>Add / find a movie</strong>
-        <small class="small">Data stored in browser or sent as GitHub Issue</small>
+        <small class="small">Live shared ratings — stored in Firebase</small>
       </div>
 
       <div class="controls" role="group" aria-label="movie controls">
@@ -104,7 +98,7 @@
           <option value="title">Title A–Z</option>
         </select>
         <div style="flex:1"></div>
-        <div class="small">Show verified only</div>
+        <div class="small">Show verified-only</div>
         <input type="checkbox" id="verifiedOnly" />
       </div>
 
@@ -116,30 +110,29 @@
     <div class="card" id="selectedCard" aria-hidden="true" style="display:none">
       <strong id="selectedTitle">Selected</strong>
       <div class="small" id="selectedSubtitle">Movie info</div>
-      <div style="height:10px"></div>
+      <div style="height:12px"></div>
 
-      <div style="display:flex;gap:10px;align-items:center">
-        <input type="text" id="raterName" placeholder="Your GitHub username (used for verification)" />
-        <input type="text" id="raterHandle" placeholder="Display name (optional)" style="width:170px" />
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
+        <div class="small">Signed in as:</div>
+        <div id="signedInAs" class="pill" style="padding:6px 10px;background:rgba(255,255,255,0.03);border-radius:999px"></div>
       </div>
-      <div style="height:8px"></div>
 
-      <div style="display:flex;gap:8px;align-items:center">
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px">
         <div class="small">Your rating:</div>
         <div id="ratingStars" class="stars" role="radiogroup" aria-label="Rating stars"></div>
         <div style="flex:1"></div>
         <button id="submitRatingBtn">Submit</button>
-        <button id="sendIssueBtn" class="ghost" title="Open GitHub issue to submit rating to repo">Send to repo</button>
       </div>
-      <div style="height:8px"></div>
-      <textarea id="comment" placeholder="Optional comment (public when sending to repo)" style="width:100%;height:68px;padding:10px;border-radius:8px;background:var(--glass);border:1px solid rgba(255,255,255,0.03);color:inherit"></textarea>
+
+      <textarea id="comment" placeholder="Optional comment (public)"></textarea>
 
       <div style="height:12px"></div>
+
       <div style="display:flex;gap:12px;align-items:center">
-        <div><span class="avg" id="avgScore">—</span> <div class="small">avg</div></div>
+        <div><div class="avg" id="avgScore">—</div> <div class="small">avg</div></div>
         <div class="small" id="ratingCount">— ratings</div>
         <div style="flex:1"></div>
-        <button id="deleteMovie" class="ghost">Delete movie</button>
+        <button id="deleteMovie" class="ghost">Delete movie (admin)</button>
       </div>
 
       <div style="height:12px"></div>
@@ -147,18 +140,19 @@
     </div>
   </main>
 
-  <!-- Right: top raters, instructions -->
+  <!-- Right column -->
   <aside class="right">
     <div class="card">
       <strong>Top Raters</strong>
-      <div class="small">Most contributions (local storage)</div>
+      <div class="small">Most contributions (live)</div>
       <div style="height:12px"></div>
       <div class="top-raters" id="topRaters"></div>
       <div style="height:12px"></div>
       <div class="small">How verification works:</div>
-      <pre class="small">• Add your GitHub username under "Your GitHub username".
-• The site fetches /verified.json from this repo root and shows a verified badge if present.
-• To become verified, repo admins add the GitHub username to verified.json (via PR/edit).</pre>
+      <pre class="small" style="white-space:pre-wrap">• Sign in with Google.
+• Admins add users to database node /verifiedUsers (UID or email).
+• Users listed there show a ✔ verified badge when signed in.
+• You can edit /verifiedUsers in Firebase Console → Realtime Database.</pre>
     </div>
 
     <div style="height:12px"></div>
@@ -167,395 +161,445 @@
       <strong>Admin hints</strong>
       <div style="height:8px"></div>
       <ul class="small" style="margin:0;padding-left:18px">
-        <li>Maintain <code>verified.json</code> in the repo root (array of usernames).</li>
-        <li>To centrally collect ratings, use "Send to repo" — opens a prefilled GitHub Issue.</li>
-        <li>To reset site data, use browser devtools → Application → Local Storage → remove key <code>criticlane_data</code>.</li>
+        <li>Open Firebase Console → Realtime Database → Data to view stored movies & ratings.</li>
+        <li>To mark verified users, add an entry under <code>/verifiedUsers/{uidOrSafeEmail}: true</code>.</li>
+        <li>To restrict writes later, update Realtime Database rules and require auth.</li>
       </ul>
     </div>
   </aside>
 
   <footer>
-    Built for GitHub Pages • Data stored locally • Verified list: <code>/verified.json</code>
+    Built with Firebase Realtime DB • Data stored live • Sign in required to rate
   </footer>
 </div>
 
-<script>
-/*
-  CriticLane — static movie rating site
-  - Data model stored under localStorage key 'criticlane_data'
-  - Verified users list fetched from '/verified.json'
-  - Ratings structure:
-    data = { movies: { id: { title, year, slug, createdAt, ratings: [ {user, display, score, comment, createdAt} ] } }, raterIndex: {user: count} }
-*/
+<script type="module">
+/* ============================
+   MovieRatings — Full site
+   - Uses Firebase Realtime Database + Google Auth
+   - Data model (Realtime DB):
+     /movies/{movieId} = { id, title, year, slug, createdAt }
+     /ratings/{movieId}/{ratingId} = { uid, displayName, email, score, comment, createdAt, verified }
+     /raterIndex/{uid} = { displayName, email, count }
+     /verifiedUsers/{uidOrSafeEmail}: true   (managed by admin)
+   ============================ */
 
-const STORAGE_KEY = 'criticlane_data_v1';
-const VERIFIED_ENDPOINT = '/verified.json';
-const app = (() => {
-  // Utilities
-  const uid = () => Math.random().toString(36).slice(2,9);
-  const slugify = s => s.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'');
-  const now = () => new Date().toISOString();
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+import { getDatabase, ref, push, set, onValue, child, get, remove, query, orderByChild, limitToLast } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-database.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
 
-  // Load/Save
-  const load = () => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) return {movies:{}, raterIndex:{}};
-      return JSON.parse(raw);
-    } catch(e){console.error('load err',e); return {movies:{}, raterIndex:{}};}
-  };
-  const save = (state) => localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+/* -------------------------
+   === YOUR FIREBASE CONFIG
+   (copied exactly as you provided)
+   ------------------------- */
+const firebaseConfig = {
+  apiKey: "AIzaSyDPcQhADbFJzw54YLCMPKreZKKLmL1SRW8",
+  authDomain: "the-movie-ratings.firebaseapp.com",
+  databaseURL: "https://the-movie-ratings-default-rtdb.firebaseio.com",
+  projectId: "the-movie-ratings",
+  storageBucket: "the-movie-ratings.firebasestorage.app",
+  messagingSenderId: "208532935279",
+  appId: "1:208532935279:web:875fc444e712c75667b39a",
+  measurementId: "G-6582T4SZKR"
+};
+/* ------------------------- */
 
-  // Verified users
-  let verifiedUsers = [];
-  const fetchVerified = async () => {
-    try {
-      const res = await fetch(VERIFIED_ENDPOINT, {cache: 'no-store'});
-      if (!res.ok) throw new Error('no verified.json');
-      verifiedUsers = await res.json();
-    } catch(e) {
-      console.info('verified.json not found or unreachable — running without central verification.');
-      verifiedUsers = [];
-    } finally {
-      renderAll();
-    }
-  };
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+const auth = getAuth(app);
+const provider = new GoogleAuthProvider();
 
-  // State
-  let state = load();
+/* -------------------------
+   Utilities
+   ------------------------- */
+const uid = () => Math.random().toString(36).slice(2,9);
+const nowISO = () => new Date().toISOString();
+const slugify = s => s.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'');
+const escapeHtml = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 
-  // DOM refs
-  const refs = {
-    movieList: document.getElementById('movieList'),
-    addTitle: document.getElementById('newTitle'),
-    addYear: document.getElementById('newYear'),
-    addBtn: document.getElementById('addMovieBtn'),
-    search: document.getElementById('searchInput'),
-    sort: document.getElementById('sortSelect'),
-    verifiedOnly: document.getElementById('verifiedOnly'),
-    selectedCard: document.getElementById('selectedCard'),
-    selectedTitle: document.getElementById('selectedTitle'),
-    selectedSubtitle: document.getElementById('selectedSubtitle'),
-    raterName: document.getElementById('raterName'),
-    raterHandle: document.getElementById('raterHandle'),
-    ratingStars: document.getElementById('ratingStars'),
-    submitRatingBtn: document.getElementById('submitRatingBtn'),
-    sendIssueBtn: document.getElementById('sendIssueBtn'),
-    comment: document.getElementById('comment'),
-    avgScore: document.getElementById('avgScore'),
-    ratingCount: document.getElementById('ratingCount'),
-    breakdown: document.getElementById('breakdown'),
-    deleteMovieBtn: document.getElementById('deleteMovie'),
-    exportJson: document.getElementById('exportJson'),
-    importJson: document.getElementById('importJson'),
-    topRaters: document.getElementById('topRaters'),
-  };
+/* -------------------------
+   DOM refs
+   ------------------------- */
+const refs = {
+  signInBtn: document.getElementById('signInBtn'),
+  signOutBtn: document.getElementById('signOutBtn'),
+  signedInControls: document.getElementById('signedInControls'),
+  signedOutControls: document.getElementById('signedOutControls'),
+  userName: document.getElementById('userName'),
+  verifiedBadge: document.getElementById('verifiedBadge'),
+  addTitle: document.getElementById('newTitle'),
+  addYear: document.getElementById('newYear'),
+  addBtn: document.getElementById('addMovieBtn'),
+  search: document.getElementById('searchInput'),
+  sort: document.getElementById('sortSelect'),
+  verifiedOnly: document.getElementById('verifiedOnly'),
+  movieList: document.getElementById('movieList'),
+  selectedCard: document.getElementById('selectedCard'),
+  selectedTitle: document.getElementById('selectedTitle'),
+  selectedSubtitle: document.getElementById('selectedSubtitle'),
+  ratingStars: document.getElementById('ratingStars'),
+  submitRatingBtn: document.getElementById('submitRatingBtn'),
+  comment: document.getElementById('comment'),
+  avgScore: document.getElementById('avgScore'),
+  ratingCount: document.getElementById('ratingCount'),
+  breakdown: document.getElementById('breakdown'),
+  deleteMovieBtn: document.getElementById('deleteMovie'),
+  topRaters: document.getElementById('topRaters'),
+  signedInAs: document.getElementById('signedInAs'),
+};
 
-  // Local selection
-  let selectedMovieId = null;
-  let pendingRating = 5;
+/* -------------------------
+   App state
+   ------------------------- */
+let currentUser = null;        // firebase user
+let currentVerified = {};     // cached verified users map
+let selectedMovieId = null;
+let pendingRating = 8;
 
-  // Create rating stars widget
-  function renderStars(container, onSelect, value=5) {
-    container.innerHTML = '';
-    for (let i=1;i<=10;i++){
-      const s = document.createElement('div');
-      s.className = 'star';
-      s.tabIndex = 0;
-      s.setAttribute('role','radio');
-      s.setAttribute('aria-checked', i===value ? 'true' : 'false');
-      s.title = i + '/10';
-      s.textContent = '★';
-      s.style.opacity = i <= value ? 1 : 0.25;
-      s.addEventListener('click', ()=>{ onSelect(i); renderStars(container,onSelect,i);});
-      s.addEventListener('keydown', (e)=>{ if (e.key==='Enter' || e.key===' ') { onSelect(i); renderStars(container,onSelect,i); } });
-      container.appendChild(s);
-    }
+/* -------------------------
+   Auth
+   ------------------------- */
+refs.signInBtn.addEventListener('click', async () => {
+  try {
+    await signInWithPopup(auth, provider);
+  } catch (e) {
+    console.error(e);
+    alert('Sign-in failed: ' + e.message);
   }
+});
+refs.signOutBtn.addEventListener('click', async ()=> {
+  await signOut(auth);
+});
 
-  // Movie utilities
-  function ensureMovie(title, year) {
-    title = (title||'').trim();
-    if (!title) return null;
-    const slug = slugify(title + (year ? '-' + year : ''));
-    // find existing
-    for (const id in state.movies){
-      if (state.movies[id].slug === slug) return id;
-    }
-    // create
-    const id = uid();
-    state.movies[id] = { id, title, year: year||'', slug, createdAt: now(), ratings: [] };
-    save(state);
-    return id;
+onAuthStateChanged(auth, user => {
+  currentUser = user;
+  if (user) {
+    refs.signedOutControls.style.display = 'none';
+    refs.signedInControls.style.display = 'flex';
+    refs.userName.textContent = user.displayName || user.email || user.uid;
+    refs.signedInAs.textContent = (user.displayName || user.email || user.uid);
+    checkVerified(user).then(v => {
+      renderVerifiedBadge(v);
+    });
+  } else {
+    refs.signedOutControls.style.display = 'flex';
+    refs.signedInControls.style.display = 'none';
+    refs.userName.textContent = '—';
+    refs.signedInAs.textContent = '';
+    renderVerifiedBadge(false);
   }
+});
 
-  function computeStats(m) {
-    const count = m.ratings.length;
-    if (!count) return {avg:0,count,breakdown:{}};
-    const sum = m.ratings.reduce((a,b)=>a+b.score,0);
-    const avg = Math.round((sum/count)*100)/100;
+/* -------------------------
+   Fetch verified list (cached)
+   Admins: add entries under /verifiedUsers in DB:
+     e.g. /verifiedUsers/uid_or_safe_email: true
+   ------------------------- */
+function watchVerifiedList() {
+  const vRef = ref(db, 'verifiedUsers');
+  onValue(vRef, snapshot => {
+    const val = snapshot.val() || {};
+    currentVerified = val;
+    // update signed-in badge if needed
+    if (currentUser) checkVerified(currentUser).then(v => renderVerifiedBadge(v));
+  });
+}
+watchVerifiedList();
+
+async function checkVerified(user) {
+  if (!user) return false;
+  const uidKey = user.uid;
+  const safeEmailKey = (user.email || '').replace('.', '_dot_'); // simple safe version for emails if used as keys
+  // check in cached map
+  if (currentVerified[uidKey]) return true;
+  if (currentVerified[safeEmailKey]) return true;
+  // also allow storing raw emails as keys (some admins do)
+  if (currentVerified[user.email]) return true;
+  return false;
+}
+
+function renderVerifiedBadge(isVerified) {
+  refs.verifiedBadge.innerHTML = isVerified ? '<div class="badge">✔ verified</div>' : '';
+}
+
+/* -------------------------
+   Movies & Ratings (Realtime)
+   ------------------------- */
+
+function movieRef(movieId){ return ref(db, `movies/${movieId}`); }
+function moviesRoot(){ return ref(db, 'movies'); }
+function ratingsRoot(movieId){ return ref(db, `ratings/${movieId}`); }
+function raterIndexRef(uid){ return ref(db, `raterIndex/${uid}`); }
+
+/* Utility: read all movies once (we also attach listeners) */
+function listenMovies() {
+  const mRef = moviesRoot();
+  onValue(mRef, snapshot => {
+    const val = snapshot.val() || {};
+    // convert to array
+    const arr = Object.values(val);
+    renderMovieList(arr);
+  });
+}
+listenMovies();
+
+/* Utility: watch ratings per movie by setting onValue when a movie is selected */
+const ratingsListeners = {}; // movieId -> unsubscribe handled implicitly by firebase onValue
+
+function attachRatingsListener(movieId) {
+  // avoid duplicate listener (we can rely on one global movies listener to update movies, but ratings are per-movie)
+  const rRef = ratingsRoot(movieId);
+  onValue(rRef, snapshot => {
+    // when ratings change, if current selected is movieId, update selected stats
+    if (selectedMovieId === movieId) updateSelectedStats(movieId, snapshot.val());
+    // update top raters globally
+    updateTopRaters();
+    // also re-render list (avg/count shown on rows) by re-reading movies & computing aggregate live
+    // we rely on the movie list listener for re-render; to ensure averages update, re-query movies for UI refresh
+    // (simple approach: call fetchAllMovies once)
+    // but we keep it light — renderMovieList recalculates via computeStats using ratings fetched separately on demand
+    // (see renderMovieList)
+  });
+}
+
+/* Add movie */
+refs.addBtn.addEventListener('click', async () => {
+  const title = refs.addTitle.value.trim();
+  const year = refs.addYear.value.trim();
+  if (!title) return alert('Please enter a movie title.');
+  const slug = slugify(title + (year ? '-' + year : ''));
+  // create a deterministic id using slug (safe)
+  const id = slug;
+  const mRef = movieRef(id);
+  const snapshot = await get(mRef);
+  if (!snapshot.exists()) {
+    await set(mRef, { id, title, year, slug, createdAt: nowISO() });
+  }
+  // ensure we have rating listener
+  attachRatingsListener(id);
+  selectMovie(id);
+  refs.addTitle.value = ''; refs.addYear.value = '';
+});
+
+/* Delete movie (admin) - only allow if signed-in and isVerified (admin can be managed manually) */
+refs.deleteMovieBtn.addEventListener('click', async () => {
+  if (!selectedMovieId) return;
+  if (!currentUser) return alert('Sign in as an admin to delete movies.');
+  const verified = await checkVerified(currentUser);
+  if (!verified) return alert('Only verified admins may delete movies.');
+  if (!confirm('Delete movie and all its ratings? This cannot be undone.')) return;
+  await remove(movieRef(selectedMovieId));
+  await remove(ratingsRoot(selectedMovieId));
+  selectedMovieId = null;
+  refs.selectedCard.style.display = 'none';
+});
+
+/* Render movie list (we'll compute averages by fetching ratings snapshot for each movie) */
+async function renderMovieList(movieArr) {
+  const q = refs.search.value.trim().toLowerCase();
+  const onlyVerified = refs.verifiedOnly.checked;
+  let arr = movieArr.slice();
+  if (q) arr = arr.filter(m => (m.title + ' ' + (m.year||'')).toLowerCase().includes(q));
+  // For performance: compute stats by fetching ratings snapshot for each movie in parallel with Promise.all
+  const withStats = await Promise.all(arr.map(async m => {
+    const ratingsSnap = await get(ratingsRoot(m.id));
+    const ratings = ratingsSnap.val() || {};
+    const vals = Object.values(ratings).map(r=>r.score || 0);
+    const count = vals.length;
+    const avg = count ? Math.round((vals.reduce((a,b)=>a+b,0)/count)*100)/100 : 0;
     const breakdown = {};
-    for (let i=1;i<=10;i++) breakdown[i]=0;
-    m.ratings.forEach(r=> breakdown[r.score] = (breakdown[r.score]||0)+1);
-    return {avg,count,breakdown};
+    for (let i=1;i<=10;i++) breakdown[i] = 0;
+    Object.values(ratings).forEach(r => { breakdown[r.score] = (breakdown[r.score]||0)+1; });
+    const hasVerified = Object.values(ratings).some(r => r.verified);
+    return {...m, stats:{avg,count,breakdown,hasVerified}};
+  }));
+  // Filter verified-only if requested
+  if (onlyVerified) arr = withStats.filter(m=>m.stats.hasVerified);
+  // Sorting
+  const sort = refs.sort.value;
+  withStats.sort((a,b) => {
+    if (sort === 'recent') return new Date(b.createdAt) - new Date(a.createdAt);
+    if (sort === 'avg') return (b.stats.avg||0) - (a.stats.avg||0);
+    if (sort === 'count') return (b.stats.count||0) - (a.stats.count||0);
+    if (sort === 'title') return a.title.localeCompare(b.title);
+    return 0;
+  });
+  // Render
+  refs.movieList.innerHTML = '';
+  if (withStats.length === 0) {
+    refs.movieList.innerHTML = '<div class="small" style="padding:12px">No movies yet. Add one above.</div>';
+    return;
   }
-
-  function renderMovieRow(movie) {
-    const stats = computeStats(movie);
+  for (const m of withStats) {
     const el = document.createElement('div');
-    el.className = 'movie-row';
+    el.className = 'movie-row card';
     el.innerHTML = `
-      <div class="poster" aria-hidden="true">${movie.title.split(' ').map(s=>s[0]).slice(0,2).join('')}</div>
+      <div class="poster" aria-hidden="true">${escapeHtml(m.title.split(' ').map(s=>s[0]).slice(0,2).join(''))}</div>
       <div class="meta">
         <div class="title-row">
-          <div style="flex:1">
-            <div class="movie-title">${escapeHtml(movie.title)} ${movie.year?'<span class="small">('+escapeHtml(movie.year)+')</span>':''}</div>
-            <div class="small">${new Date(movie.createdAt).toLocaleString()}</div>
+          <div style="min-width:0">
+            <div class="movie-title">${escapeHtml(m.title)} ${m.year?'<span class="small">('+escapeHtml(m.year)+')</span>':''}</div>
+            <div class="small">Added ${new Date(m.createdAt).toLocaleString()}</div>
           </div>
-          <div class="rating-block">
-            <div style="text-align:right">
-              <div class="avg">${stats.count ? stats.avg : '—'}</div>
-              <div class="small">${stats.count} ratings</div>
-            </div>
+          <div style="text-align:right">
+            <div class="avg">${m.stats.count ? m.stats.avg : '—'}</div>
+            <div class="small">${m.stats.count} ratings</div>
           </div>
         </div>
       </div>
     `;
-    el.addEventListener('click', ()=> selectMovie(movie.id));
-    return el;
-  }
-
-  function escapeHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-
-  // Render list
-  function renderList() {
-    refs.movieList.innerHTML = '';
-    const q = refs.search.value.trim().toLowerCase();
-    const onlyVerified = refs.verifiedOnly.checked;
-    let arr = Object.values(state.movies);
-    if (q) arr = arr.filter(m => (m.title + ' ' + (m.year||'')).toLowerCase().includes(q));
-    if (onlyVerified) {
-      arr = arr.filter(m => {
-        // show if any rater on this movie is verified
-        return m.ratings.some(r => verifiedUsers.includes((r.user||'').toLowerCase()));
-      });
-    }
-    const sort = refs.sort.value;
-    arr.sort((a,b)=>{
-      const sa = computeStats(a), sb = computeStats(b);
-      if (sort === 'recent') return new Date(b.createdAt) - new Date(a.createdAt);
-      if (sort === 'avg') return (sb.avg || 0) - (sa.avg || 0);
-      if (sort === 'count') return sb.count - sa.count;
-      if (sort === 'title') return a.title.localeCompare(b.title);
-      return 0;
+    el.addEventListener('click', () => {
+      selectMovie(m.id);
+      attachRatingsListener(m.id);
     });
-    if (arr.length === 0) {
-      refs.movieList.innerHTML = '<div class="small" style="padding:12px">No movies yet. Add one above.</div>';
-      return;
-    }
-    arr.forEach(m => refs.movieList.appendChild(renderMovieRow(m)));
+    refs.movieList.appendChild(el);
   }
+}
 
-  // Selection
-  function selectMovie(id) {
-    selectedMovieId = id;
-    const m = state.movies[id];
-    if (!m) return;
-    refs.selectedCard.style.display = '';
-    refs.selectedCard.setAttribute('aria-hidden','false');
-    refs.selectedTitle.textContent = m.title + (m.year ? ' ('+m.year+')' : '');
-    refs.selectedSubtitle.textContent = 'Created ' + new Date(m.createdAt).toLocaleString();
-    // update stats
-    updateSelectedStats();
+/* Select movie */
+async function selectMovie(id) {
+  selectedMovieId = id;
+  const snap = await get(movieRef(id));
+  const m = snap.val();
+  if (!m) return;
+  refs.selectedCard.style.display = '';
+  refs.selectedCard.setAttribute('aria-hidden', 'false');
+  refs.selectedTitle.textContent = m.title + (m.year ? ' (' + m.year + ')' : '');
+  refs.selectedSubtitle.textContent = 'Added ' + new Date(m.createdAt).toLocaleString();
+  // attach ratings listener (ensures UI updates)
+  attachRatingsListener(id);
+  // render stars widget
+  renderStars(refs.ratingStars, (v) => { pendingRating = v; }, pendingRating );
+  // Update stats by fetching current ratings snapshot
+  const ratingsSnap = await get(ratingsRoot(id));
+  updateSelectedStats(id, ratingsSnap.val());
+}
+
+/* Stars widget */
+function renderStars(container, onSelect, value=8) {
+  container.innerHTML = '';
+  for (let i=1;i<=10;i++){
+    const s = document.createElement('div');
+    s.className = 'star ' + (i <= value ? 'on' : '');
+    s.tabIndex = 0;
+    s.setAttribute('role','radio');
+    s.setAttribute('aria-checked', i===value ? 'true' : 'false');
+    s.title = i + '/10';
+    s.textContent = '★';
+    s.addEventListener('click', ()=>{ onSelect(i); renderStars(container,onSelect,i); });
+    s.addEventListener('keydown', (e)=>{ if (e.key === 'Enter' || e.key === ' ') { onSelect(i); renderStars(container,onSelect,i); } });
+    container.appendChild(s);
   }
+}
 
-  function updateSelectedStats() {
-    if (!selectedMovieId) return;
-    const m = state.movies[selectedMovieId];
-    const s = computeStats(m);
-    refs.avgScore.textContent = s.count ? s.avg : '—';
-    refs.ratingCount.textContent = s.count + ' ratings';
-    // breakdown
-    let html = '<div style="display:flex;gap:8px;flex-wrap:wrap">';
-    for (let i=10;i>=1;i--){
-      const pct = s.count ? Math.round((s.breakdown[i]/s.count)*100) : 0;
-      html += `<div class="pill" title="${s.breakdown[i]||0} votes">${i} • ${pct}%</div>`;
-    }
-    html += '</div>';
-    refs.breakdown.innerHTML = html;
+/* Update selected stats UI (given ratings data) */
+function updateSelectedStats(movieId, ratingsVal) {
+  const ratings = ratingsVal || {};
+  const values = Object.values(ratings).map(r => r.score || 0);
+  const count = values.length;
+  const avg = count ? Math.round((values.reduce((a,b)=>a+b,0)/count)*100)/100 : 0;
+  refs.avgScore.textContent = count ? avg : '—';
+  refs.ratingCount.textContent = (count) + ' ratings';
+  // breakdown UI
+  let html = '<div style="display:flex;gap:8px;flex-wrap:wrap">';
+  const breakdown = {};
+  for (let i=1;i<=10;i++) breakdown[i] = 0;
+  Object.values(ratings).forEach(r => breakdown[r.score] = (breakdown[r.score]||0)+1);
+  for (let i=10;i>=1;i--) {
+    const pct = count ? Math.round((breakdown[i]/count)*100) : 0;
+    html += `<div class="badge" style="opacity:0.95">${i} • ${pct}%</div>`;
   }
+  html += '</div>';
+  refs.breakdown.innerHTML = html;
+}
 
-  // Submit rating
-  function submitRating() {
-    if (!selectedMovieId) return alert('Select a movie first.');
-    const user = refs.raterName.value.trim();
-    const display = refs.raterHandle.value.trim() || refs.raterName.value.trim() || 'Anonymous';
-    if (!user) return alert('Please enter your GitHub username (used for verification).');
-    const score = pendingRating;
-    const comment = refs.comment.value.trim();
-    const r = { user: user.toLowerCase(), display, score, comment, createdAt: now() };
-    state.movies[selectedMovieId].ratings.push(r);
-    state.raterIndex[user.toLowerCase()] = (state.raterIndex[user.toLowerCase()]||0) + 1;
-    save(state);
-    renderAll();
-    // Clear comment, keep name for convenience
-    refs.comment.value = '';
-    alert('Rating saved locally.');
-  }
+/* Submit rating */
+refs.submitRatingBtn.addEventListener('click', async () => {
+  if (!currentUser) return alert('Please sign in first.');
+  if (!selectedMovieId) return alert('Please select a movie.');
+  if (!pendingRating || pendingRating < 1 || pendingRating > 10) return alert('Choose a rating between 1 and 10.');
+  const comment = refs.comment.value.trim();
+  const uid = currentUser.uid;
+  const display = currentUser.displayName || currentUser.email || uid;
+  const email = currentUser.email || '';
+  const verified = await checkVerified(currentUser);
 
-  // Send rating to repo via prefilled GitHub Issue
-  function sendRatingToRepo() {
-    if (!selectedMovieId) return alert('Select a movie first.');
-    const user = refs.raterName.value.trim();
-    const display = refs.raterHandle.value.trim() || user || 'Anonymous';
-    if (!user) return alert('Please enter your GitHub username to include in the issue title/body.');
-    const score = pendingRating;
-    const comment = refs.comment.value.trim();
-    const m = state.movies[selectedMovieId];
-    const title = encodeURIComponent(`[rating] ${m.title} ${m.year ? '('+m.year+')' : ''} — ${score}/10 by ${user}`);
-    const body = encodeURIComponent(
-`Movie: ${m.title} ${m.year ? '('+m.year+')' : ''}
-Score: ${score}/10
-Rater: ${user} (${display})
-Verified (in repo's verified.json): ${verifiedUsers.includes(user.toLowerCase()) ? 'Yes' : 'No'}
-Comment:
-${comment}
+  // push rating
+  const ratingsRef = ratingsRoot(selectedMovieId);
+  const newId = push(ratingsRef).key;
+  // write rating node
+  await set(ref(db, `ratings/${selectedMovieId}/${newId}`), {
+    uid, displayName: display, email, score: pendingRating, comment, createdAt: nowISO(), verified: !!verified
+  });
 
-(Submitted from CriticLane static site)
-`
-    );
-    // open new issue page on GitHub - user must replace OWNER/REPO in URL (or we can point to create issue on current repo if location known)
-    // We'll attempt to prefill issue for the repo hosting the site:
-    const repoPath = window.location.pathname.split('/').slice(1,2).join('/');
-    // It's not always possible to reliably calculate owner/repo. Instead we open generic new issue creation for the current repository if it looks like GitHub Pages path.
-    // Let user update the URL if needed.
-    let ownerRepo = '';
-    // Try to infer from hostname: if site is https://username.github.io/repo, then owner = username, repo = segment after host
-    if (window.location.hostname.endsWith('github.io')) {
-      const owner = window.location.hostname.split('.')[0];
-      const parts = window.location.pathname.split('/').filter(Boolean);
-      if (parts.length >= 1) ownerRepo = owner + '/' + parts[0];
-    }
-    let target = ownerRepo ? `https://github.com/${ownerRepo}/issues/new?title=${title}&body=${body}` : `https://github.com/issues/new?title=${title}&body=${body}`;
-    window.open(target, '_blank');
-  }
+  // increment rater index (atomic-like: read then set)
+  const rInf = await get(raterIndexRef(uid));
+  const prev = rInf.exists() ? (rInf.val().count || 0) : 0;
+  await set(raterIndexRef(uid), { displayName: display, email: email, count: prev + 1 });
 
-  // Delete movie (local)
-  function deleteMovie() {
-    if (!selectedMovieId) return;
-    if (!confirm('Delete this movie and all local ratings? This cannot be undone locally.')) return;
-    delete state.movies[selectedMovieId];
-    save(state);
-    selectedMovieId = null;
-    refs.selectedCard.style.display = 'none';
-    renderAll();
-  }
+  refs.comment.value = '';
+  alert('Rating submitted. Thank you!');
+});
 
-  function renderTopRaters() {
+/* Top raters: compute from raterIndex node */
+function updateTopRaters() {
+  const rRef = ref(db, 'raterIndex');
+  onValue(rRef, snapshot => {
+    const val = snapshot.val() || {};
+    const arr = Object.entries(val).map(([uid, data]) => ({ uid, ...data }));
+    arr.sort((a,b) => (b.count||0) - (a.count||0));
     refs.topRaters.innerHTML = '';
-    const arr = Object.entries(state.raterIndex).map(([user,count])=>({user,count}));
-    arr.sort((a,b)=>b.count-a.count);
-    if (arr.length===0) {
+    if (arr.length === 0) {
       refs.topRaters.innerHTML = '<div class="small">No raters yet.</div>';
       return;
     }
-    arr.slice(0,8).forEach(r=>{
+    arr.slice(0,8).forEach(r => {
       const el = document.createElement('div');
       el.className = 'rater';
-      el.innerHTML = `<div class="avatar">${escapeHtml(r.user.slice(0,2).toUpperCase())}</div>
-                      <div style="flex:1">
-                        <div style="font-weight:700">${escapeHtml(r.user)}</div>
-                        <div class="small">${r.count} ratings</div>
-                      </div>
-                      <div>${ verifiedUsers.includes(r.user.toLowerCase()) ? '<div class="badge">✔ verified</div>' : ''}</div>`;
+      el.innerHTML = `<div class="avatar">${escapeHtml((r.displayName||r.email||r.uid).slice(0,2).toUpperCase())}</div>
+      <div style="flex:1">
+        <div style="font-weight:700">${escapeHtml(r.displayName || r.email || r.uid)}</div>
+        <div class="small">${r.count || 0} ratings</div>
+      </div>
+      <div>${currentVerified[r.uid] || currentVerified[(r.email||'').replace('.', '_dot_')] || currentVerified[r.email] ? '<div class="badge">✔</div>' : ''}</div>`;
       refs.topRaters.appendChild(el);
     });
+  });
+}
+updateTopRaters();
+
+/* live search/sort handlers */
+refs.search.addEventListener('input', async () => { const mSnap = await get(moviesRoot()); renderMovieList(Object.values(mSnap.val()||{})); });
+refs.sort.addEventListener('change', async () => { const mSnap = await get(moviesRoot()); renderMovieList(Object.values(mSnap.val()||{})); });
+refs.verifiedOnly.addEventListener('change', async () => { const mSnap = await get(moviesRoot()); renderMovieList(Object.values(mSnap.val()||{})); });
+
+/* Helper: initial seed movies (optional) */
+async function seedExamples() {
+  const mSnap = await get(moviesRoot());
+  if (!mSnap.exists()) {
+    const sample = [
+      { id: 'inception', title: 'Inception', year: '2010', slug: 'inception', createdAt: nowISO() },
+      { id: 'interstellar', title: 'Interstellar', year: '2014', slug: 'interstellar', createdAt: nowISO() },
+      { id: 'the-matrix', title: 'The Matrix', year: '1999', slug: 'the-matrix', createdAt: nowISO() }
+    ];
+    for (const s of sample) await set(movieRef(s.id), s);
   }
+}
+// Uncomment to auto-seed on an empty DB:
+// seedExamples();
 
-  // Export/import
-  function exportData() {
-    const data = JSON.stringify(state, null, 2);
-    const blob = new Blob([data], {type:'application/json'});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = 'criticlane-data.json';
-    document.body.appendChild(a); a.click(); a.remove();
-    URL.revokeObjectURL(url);
-  }
-  function importData() {
-    const inp = document.createElement('input'); inp.type='file'; inp.accept='application/json';
-    inp.addEventListener('change', e=>{
-      const f = e.target.files[0];
-      if (!f) return;
-      const reader = new FileReader();
-      reader.onload = ev => {
-        try {
-          const parsed = JSON.parse(ev.target.result);
-          state = parsed;
-          save(state);
-          renderAll();
-          alert('Imported data.');
-        } catch(err){ alert('Import failed: ' + err.message); }
-      };
-      reader.readAsText(f);
-    });
-    inp.click();
-  }
-
-  // Setup events
-  function setup() {
-    refs.addBtn.addEventListener('click', ()=>{
-      const t = refs.addTitle.value.trim();
-      const y = refs.addYear.value.trim();
-      if (!t) { alert('Enter a movie title'); return; }
-      const id = ensureMovie(t, y);
-      refs.addTitle.value = '';
-      refs.addYear.value = '';
-      selectMovie(id);
-      renderAll();
-    });
-
-    refs.search.addEventListener('input', renderList);
-    refs.sort.addEventListener('change', renderList);
-    refs.verifiedOnly.addEventListener('change', renderList);
-
-    // stars
-    renderStars(refs.ratingStars, (v)=>{ pendingRating = v; }, pendingRating);
-
-    refs.submitRatingBtn.addEventListener('click', submitRating);
-    refs.sendIssueBtn.addEventListener('click', sendRatingToRepo);
-    refs.deleteMovieBtn.addEventListener('click', deleteMovie);
-    refs.exportJson.addEventListener('click', exportData);
-    refs.importJson.addEventListener('click', importData);
-
-    // keyboard: Enter add movie from title field
-    refs.addTitle.addEventListener('keydown', (e)=>{ if (e.key==='Enter') refs.addBtn.click(); });
-
-    // initial render
-    renderAll();
-    // fetch verified list
-    fetchVerified();
-  }
-
-  function renderAll() {
-    state = load();
-    renderList();
-    if (selectedMovieId && state.movies[selectedMovieId]) updateSelectedStats();
-    else { refs.selectedCard.style.display = 'none'; refs.selectedCard.setAttribute('aria-hidden','true'); }
-    renderTopRaters();
-  }
-
-  // init
-  setup();
-
-  // expose for debugging
-  return {
-    loadState: ()=>state,
-    saveState: ()=>save(state),
-    refreshVerified: fetchVerified,
-    getSelectedId: ()=> selectedMovieId
-  };
+/* Initial rendering: fetch movies and render */
+(async function init() {
+  const mSnap = await get(moviesRoot());
+  renderMovieList(Object.values(mSnap.val()||{}));
 })();
+
+/* Misc: allow enter to add movie */
+refs.addTitle.addEventListener('keydown', (e)=>{ if (e.key === 'Enter') refs.addBtn.click(); });
+
+/* Small safety: if user visits with no DB rules set for public writes, they may still write in test mode. 
+   Secure with proper rules when ready. */
+
 </script>
 </body>
 </html>
