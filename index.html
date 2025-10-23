@@ -254,7 +254,7 @@ const refs = {
 let currentUser = null;        // firebase user
 let currentVerified = {};     // cached verified users map
 let selectedMovieId = null;
-let pendingRating = 8;
+let pendingRating = 5;
 
 /* -------------------------
    Auth
@@ -481,7 +481,7 @@ async function selectMovie(id) {
     pendingRating = existing.score;
     refs.comment.value = existing.comment || '';
   } else {
-    pendingRating = 0; // default
+    pendingRating = 5; // default
     refs.comment.value = '';
   }
 
