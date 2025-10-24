@@ -27,6 +27,78 @@
          button{cursor:pointer;border-radius:10px;border:none;padding:8px 12px;background:var(--accent);color:#042027;font-weight:700}
          button.ghost{background:transparent;color:var(--muted);border:1px solid rgba(255,255,255,0.04)}
          .card{background:linear-gradient(180deg,var(--card), rgba(255,255,255,0.02));border-radius:var(--radius);padding:16px;box-shadow:0 8px 24px rgba(2,6,23,0.65);border:1px solid rgba(255,255,255,0.03)}
+         .expanded-panel {
+         background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+         border: 1px solid rgba(255,255,255,0.05);
+         border-radius: var(--radius);
+         padding: 18px 20px;
+         margin-top: 10px;
+         box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+         }
+         .expanded-panel > * + * {
+         margin-top: 14px;
+         }
+         .expanded-stats {
+         display: flex;
+         flex-direction: column;
+         gap: 10px;
+         padding: 10px 0;
+         border-top: 1px solid rgba(255,255,255,0.05);
+         border-bottom: 1px solid rgba(255,255,255,0.05);
+         }
+         .expanded-stats .summary {
+         display: flex;
+         align-items: center;
+         gap: 12px;
+         flex-wrap: wrap;
+         }
+         .expanded-stats .expanded-breakdown {
+         display: flex;
+         flex-wrap: wrap;
+         gap: 6px;
+         }
+         .expanded-form {
+         display: flex;
+         flex-direction: column;
+         gap: 10px;
+         background: rgba(255,255,255,0.02);
+         border-radius: 10px;
+         padding: 12px;
+         border: 1px solid rgba(255,255,255,0.04);
+         }
+         .expanded-form .stars-container {
+         display: flex;
+         flex-wrap: wrap;
+         gap: 6px;
+         }
+         .expanded-form textarea {
+         margin-top: 6px;
+         }
+         .expanded-list {
+         display: flex;
+         flex-direction: column;
+         gap: 8px;
+         padding-top: 10px;
+         }
+         .expanded-list .rating-item {
+         background: rgba(255,255,255,0.02);
+         border-radius: 8px;
+         padding: 10px;
+         display: flex;
+         gap: 10px;
+         align-items: flex-start;
+         }
+         .expanded-list .rating-item .avatar {
+         flex-shrink: 0;
+         width: 40px;
+         height: 40px;
+         border-radius: 8px;
+         background: linear-gradient(135deg,#111827,#0b1220);
+         display: grid;
+         place-items: center;
+         font-weight: 700;
+         color: var(--muted);
+         }
          .left{min-height:60vh}
          .controls{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
          input[type="text"], input[type="search"], select, textarea{background:var(--glass);border:1px solid rgba(255,255,255,0.04);color:inherit;padding:10px;border-radius:10px;outline:none}
@@ -416,7 +488,7 @@
          /* Create expanded panel DOM for a movie (returns element) */
          function createExpandedDOM(movie) {
            const container = document.createElement('div');
-           container.className = 'card';
+           container.className = 'card expanded-panel';
            container.setAttribute('data-expanded-for', movie.id);
          
            // Basic structure:
@@ -435,21 +507,22 @@
              <div style="height:12px"></div>
          
              <div class="expanded-stats small">
-               <!-- avg / count / breakdown are injected by updateExpandedPanel -->
-               <div style="display:flex;gap:12px;align-items:center">
-                 <div><div class="avg expanded-avg">—</div><div class="small">avg</div></div>
-                 <div class="small expanded-count">— ratings</div>
-                 <div style="flex:1"></div>
-                 <button class="ghost expanded-leave-btn">Leave a rating</button>
-               </div>
-               <div style="height:8px"></div>
-               <div class="expanded-breakdown"></div>
-             </div>
+         <div class="summary">
+         <div>
+         <div class="avg expanded-avg">—</div>
+         <div class="small">avg</div>
+         </div>
+         <div class="small expanded-count">— ratings</div>
+         <div style="flex:1"></div>
+         <button class="ghost expanded-leave-btn">Leave a rating</button>
+         </div>
+         <div class="expanded-breakdown"></div>
+         </div>
          
              <div style="height:12px"></div>
          
              <!-- Hidden rating form that appears only when user clicks "Leave a rating" -->
-             <div class="expanded-form" style="display:none;gap:8px">
+             <div class="expanded-form" style="display:none">
                <div style="display:flex;gap:8px;align-items:center">
                  <div class="small">Your rating:</div>
                  <div class="stars-container" role="radiogroup" aria-label="Rating stars"></div>
@@ -590,19 +663,18 @@
              listEl.innerHTML = '<div class="small">No ratings yet.</div>';
            } else {
              entries.forEach(r => {
-               const e = document.createElement('div');
-               e.style.padding = '8px 6px';
-               e.style.borderBottom = '1px solid rgba(255,255,255,0.02)';
-               e.innerHTML = `<div style="display:flex;align-items:center;gap:8px">
-                 <div class="avatar">${escapeHtml((r.displayName||r.email||r.uid).slice(0,2).toUpperCase())}</div>
-                 <div style="flex:1">
-                   <div style="font-weight:700">${escapeHtml(r.displayName || r.email || r.uid)} <span class="small">• ${new Date(r.createdAt).toLocaleString()}</span></div>
-                   <div class="small">Score: ${r.score}/10 ${r.verified ? '<span class="badge">✔</span>' : ''}</div>
-                   ${r.comment ? `<div style="margin-top:6px">${escapeHtml(r.comment)}</div>` : ''}
-                 </div>
-               </div>`;
-               listEl.appendChild(e);
-             });
+         const e = document.createElement('div');
+         e.className = 'rating-item';
+         e.innerHTML = `
+         <div class="avatar">${escapeHtml((r.displayName||r.email||r.uid).slice(0,2).toUpperCase())}</div>
+         <div style="flex:1">
+         <div style="font-weight:700">${escapeHtml(r.displayName || r.email || r.uid)} <span class="small">• ${new Date(r.createdAt).toLocaleString()}</span></div>
+         <div class="small">Score: ${r.score}/10 ${r.verified ? '<span class="badge">✔</span>' : ''}</div>
+         ${r.comment ? `<div style="margin-top:6px">${escapeHtml(r.comment)}</div>` : ''}
+         </div>
+         `;
+         listEl.appendChild(e);
+         });
            }
          
            // If the current user has an existing rating, adjust the "Leave a rating" button behavior to open form and prefill
