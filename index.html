@@ -1,648 +1,691 @@
 <!doctype html>
 <html lang="en">
-<head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>MovieRatings — Verified Movie Ratings</title>
-<meta name="description" content="MovieRatings — verified user movie rating platform (Firebase + GitHub Pages)" />
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
-<style>
-  :root{
-    --bg: #0b1220; --card:#0f1724; --muted:#9aa7b2; --accent:#06b6d4; --accent-2:#8b5cf6;
-    --glass: rgba(255,255,255,0.03); --radius:14px;
-    --success: #00c48c; --danger:#ff6b6b;
-    color-scheme: dark;
-  }
-  *{box-sizing:border-box}
-  html,body{height:100%;margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;color:#e6eef6;background:
-    radial-gradient(1200px 600px at 10% 10%, rgba(8,20,34,0.6), transparent),
-    linear-gradient(180deg,#071026 0%, #06121a 60%);}
-  .wrap{max-width:1100px;margin:28px auto;padding:20px;display:grid;grid-template-columns:1fr 360px;gap:20px}
-  header{grid-column:1 / -1;display:flex;align-items:center;justify-content:space-between;padding-bottom:8px}
-  .brand{display:flex;gap:12px;align-items:center}
-  .logo{width:48px;height:48px;border-radius:12px;background:linear-gradient(135deg,var(--accent),var(--accent-2));display:grid;place-items:center;font-weight:800;color:#012;box-shadow:0 6px 18px rgba(3,6,23,0.6)}
-  h1{margin:0;font-size:18px}
-  .top-actions{display:flex;gap:8px;align-items:center}
-  button{cursor:pointer;border-radius:10px;border:none;padding:8px 12px;background:var(--accent);color:#042027;font-weight:700}
-  button.ghost{background:transparent;color:var(--muted);border:1px solid rgba(255,255,255,0.04)}
-  .card{background:linear-gradient(180deg,var(--card), rgba(255,255,255,0.02));border-radius:var(--radius);padding:16px;box-shadow:0 8px 24px rgba(2,6,23,0.65);border:1px solid rgba(255,255,255,0.03)}
-  .left{min-height:60vh}
-  .controls{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
-  input[type="text"], input[type="search"], select, textarea{background:var(--glass);border:1px solid rgba(255,255,255,0.04);color:inherit;padding:10px;border-radius:10px;outline:none}
-  textarea{min-height:84px;resize:vertical}
-  .movie-list{display:grid;gap:12px;margin-top:10px}
-  .movie-row{display:flex;gap:12px;align-items:center;padding:12px;border-radius:10px;background:linear-gradient(180deg, rgba(255,255,255,0.01), transparent);cursor:pointer}
-  .poster{width:72px;height:104px;border-radius:8px;background:linear-gradient(180deg,#071026,#0b1220);display:flex;align-items:center;justify-content:center;font-weight:800;color:var(--muted);font-size:20px}
-  .meta{flex:1;display:flex;flex-direction:column}
-  .title-row{display:flex;justify-content:space-between;align-items:center;gap:8px}
-  .movie-title{font-size:16px;margin:0}
-  .small{font-size:13px;color:var(--muted)}
-  .rating-block{display:flex;gap:8px;align-items:center}
-  .avg{font-weight:800;font-size:18px}
-  .stars{display:flex;gap:6px;align-items:center}
-  .star{width:26px;height:26px;display:inline-grid;place-items:center;border-radius:6px;cursor:pointer;user-select:none}
-  .star.on{background:linear-gradient(180deg,var(--accent),#07a3b5);color:#012}
-  .right{min-width:320px}
-  .top-raters .rater{display:flex;align-items:center;gap:10px;padding:8px;border-radius:8px}
-  .avatar{width:44px;height:44px;border-radius:8px;background:linear-gradient(135deg,#111827,#0b1220);display:inline-grid;place-items:center;font-weight:800;color:var(--muted)}
-  footer{grid-column:1 / -1;text-align:center;margin-top:12px;color:var(--muted);font-size:13px}
-  .badge{background:rgba(255,255,255,0.06);padding:4px 8px;border-radius:999px;font-weight:700;font-size:12px;color:#d9f7ff}
-  @media (max-width:980px){.wrap{grid-template-columns:1fr;padding:12px}.right{order:3}}
-</style>
-</head>
-<body>
-<div class="wrap" id="app">
-  <header>
-    <div class="brand">
-      <div class="logo">MR</div>
-      <div>
-        <h1>Movie Ratings</h1>
-        <div class="small">Verified Movie Ratings</div>
-      </div>
-    </div>
-
-    <div class="top-actions">
-      <div id="signedOutControls">
-        <button id="signInBtn">Sign in with Google</button>
-      </div>
-      <div id="signedInControls" style="display:none;align-items:center;gap:8px">
-        <div class="small" id="userName">—</div>
-        <div id="verifiedBadge"></div>
-        <button id="signOutBtn" class="ghost">Sign out</button>
-      </div>
-    </div>
-  </header>
-
-  <!-- Left column -->
-  <main class="left">
-    <div class="card">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-        <strong>Add / Find a Movie</strong>
-        <small class="small">Live shared ratings</small>
-      </div>
-
-      <div class="controls" role="group" aria-label="movie controls">
-        <input type="search" id="searchInput" placeholder="Search titles..." />
-        <input type="text" id="newTitle" placeholder="Movie title (required)" />
-        <input type="text" id="newYear" placeholder="Year (optional)" />
-        <button id="addMovieBtn">Add / Select</button>
-      </div>
-
-      <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
-        <div class="small">Sort:</div>
-        <select id="sortSelect">
-          <option value="recent">Most recent</option>
-          <option value="avg">Highest rated</option>
-          <option value="count">Most rated</option>
-          <option value="title">Title A–Z</option>
-        </select>
-        <div style="flex:1"></div>
-        <div class="small">Show verified-only</div>
-        <input type="checkbox" id="verifiedOnly" />
-      </div>
-
-      <div class="movie-list" id="movieList" aria-live="polite"></div>
-    </div>
-
-    <div style="height:12px"></div>
-
-    <div class="card" id="selectedCard" aria-hidden="true" style="display:none">
-      <strong id="selectedTitle">Selected</strong>
-      <div class="small" id="selectedSubtitle">Movie info</div>
-      <div style="height:12px"></div>
-
-      <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
-        <div class="small">Signed in as:</div>
-        <div id="signedInAs" class="pill" style="padding:6px 10px;background:rgba(255,255,255,0.03);border-radius:999px"></div>
-      </div>
-
-      <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px">
-        <div class="small">Your rating:</div>
-        <div id="ratingStars" class="stars" role="radiogroup" aria-label="Rating stars"></div>
-        <div style="flex:1"></div>
-        <button id="submitRatingBtn">Submit</button>
-      </div>
-
-      <textarea id="comment" placeholder="Optional comment (public)"></textarea>
-
-      <div style="height:12px"></div>
-
-      <div style="display:flex;gap:12px;align-items:center">
-        <div><div class="avg" id="avgScore">—</div> <div class="small">avg</div></div>
-        <div class="small" id="ratingCount">— ratings</div>
-        <div style="flex:1"></div>
-        <button id="deleteMovie" class="ghost">Delete movie (admin)</button>
-      </div>
-
-      <div style="height:12px"></div>
-      <div id="breakdown" class="small"></div>
-    </div>
-  </main>
-
-  <!-- Right column -->
-  <aside class="right">
-    <div class="card">
-      <strong>Top Raters</strong>
-      <div class="small">Most contributions (live)</div>
-      <div style="height:12px"></div>
-      <div class="top-raters" id="topRaters"></div>
-      <div style="height:12px"></div>
-      <div class="small">How verification works:</div>
-      <pre class="small" style="white-space:pre-wrap">• Sign in with Google.
+   <head>
+      <meta charset="utf-8" />
+      <meta name="viewport" content="width=device-width,initial-scale=1" />
+      <title>Movie Ratings</title>
+      <meta name="description" content="MovieRatings — verified user movie rating platform (Firebase + GitHub Pages)" />
+      <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+      <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+      <style>
+         :root{
+         --bg: #0b1220; --card:#0f1724; --muted:#9aa7b2; --accent:#06b6d4; --accent-2:#8b5cf6;
+         --glass: rgba(255,255,255,0.03); --radius:14px;
+         --success: #00c48c; --danger:#ff6b6b;
+         color-scheme: dark;
+         }
+         *{box-sizing:border-box}
+         html,body{height:100%;margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;color:#e6eef6;background:
+         radial-gradient(1200px 600px at 10% 10%, rgba(8,20,34,0.6), transparent),
+         linear-gradient(180deg,#071026 0%, #06121a 60%);}
+         .wrap{max-width:1100px;margin:28px auto;padding:20px;display:grid;grid-template-columns:1fr 360px;gap:20px}
+         header{grid-column:1 / -1;display:flex;align-items:center;justify-content:space-between;padding-bottom:8px}
+         .brand{display:flex;gap:12px;align-items:center}
+         .logo{width:48px;height:48px;border-radius:12px;background:linear-gradient(135deg,var(--accent),var(--accent-2));display:grid;place-items:center;font-weight:800;color:#012;box-shadow:0 6px 18px rgba(3,6,23,0.6)}
+         h1{margin:0;font-size:18px}
+         .top-actions{display:flex;gap:8px;align-items:center}
+         button{cursor:pointer;border-radius:10px;border:none;padding:8px 12px;background:var(--accent);color:#042027;font-weight:700}
+         button.ghost{background:transparent;color:var(--muted);border:1px solid rgba(255,255,255,0.04)}
+         .card{background:linear-gradient(180deg,var(--card), rgba(255,255,255,0.02));border-radius:var(--radius);padding:16px;box-shadow:0 8px 24px rgba(2,6,23,0.65);border:1px solid rgba(255,255,255,0.03)}
+         .left{min-height:60vh}
+         .controls{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+         input[type="text"], input[type="search"], select, textarea{background:var(--glass);border:1px solid rgba(255,255,255,0.04);color:inherit;padding:10px;border-radius:10px;outline:none}
+         textarea{min-height:84px;resize:vertical}
+         .movie-list{display:grid;gap:12px;margin-top:10px}
+         .movie-row{display:flex;gap:12px;align-items:center;padding:12px;border-radius:10px;background:linear-gradient(180deg, rgba(255,255,255,0.01), transparent);cursor:pointer}
+         .poster{width:72px;height:104px;border-radius:8px;background:linear-gradient(180deg,#071026,#0b1220);display:flex;align-items:center;justify-content:center;font-weight:800;color:var(--muted);font-size:20px}
+         .meta{flex:1;display:flex;flex-direction:column}
+         .title-row{display:flex;justify-content:space-between;align-items:center;gap:8px}
+         .movie-title{font-size:16px;margin:0}
+         .small{font-size:13px;color:var(--muted)}
+         .rating-block{display:flex;gap:8px;align-items:center}
+         .avg{font-weight:800;font-size:18px}
+         .stars{display:flex;gap:6px;align-items:center}
+         .star{width:26px;height:26px;display:inline-grid;place-items:center;border-radius:6px;cursor:pointer;user-select:none}
+         .star.on{background:linear-gradient(180deg,var(--accent),#07a3b5);color:#012}
+         .right{min-width:320px}
+         .top-raters .rater{display:flex;align-items:center;gap:10px;padding:8px;border-radius:8px}
+         .avatar{width:44px;height:44px;border-radius:8px;background:linear-gradient(135deg,#111827,#0b1220);display:inline-grid;place-items:center;font-weight:800;color:var(--muted)}
+         footer{grid-column:1 / -1;text-align:center;margin-top:12px;color:var(--muted);font-size:13px}
+         .badge{background:rgba(255,255,255,0.06);padding:4px 8px;border-radius:999px;font-weight:700;font-size:12px;color:#d9f7ff}
+         @media (max-width:980px){.wrap{grid-template-columns:1fr;padding:12px}.right{order:3}}
+      </style>
+   </head>
+   <body>
+      <div class="wrap" id="app">
+         <header>
+            <div class="brand">
+               <div class="logo">MR</div>
+               <div>
+                  <h1>Movie Ratings</h1>
+                  <div class="small">Verified Movie Ratings</div>
+               </div>
+            </div>
+            <div class="top-actions">
+               <div id="signedOutControls">
+                  <button id="signInBtn">Sign in with Google</button>
+               </div>
+               <div id="signedInControls" style="display:none;align-items:center;gap:8px">
+                  <div class="small" id="userName">—</div>
+                  <div id="verifiedBadge"></div>
+                  <button id="signOutBtn" class="ghost">Sign out</button>
+               </div>
+            </div>
+         </header>
+         <!-- Left column -->
+         <main class="left">
+            <div class="card">
+               <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+                  <strong>Add / Find a Movie</strong>
+                  <small class="small">Live shared ratings</small>
+               </div>
+               <div class="controls" role="group" aria-label="movie controls">
+                  <input type="search" id="searchInput" placeholder="Search titles..." />
+                  <input type="text" id="newTitle" placeholder="Movie title (required)" />
+                  <input type="text" id="newYear" placeholder="Year (optional)" />
+                  <button id="addMovieBtn">Add / Select</button>
+               </div>
+               <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
+                  <div class="small">Sort:</div>
+                  <select id="sortSelect">
+                     <option value="recent">Most recent</option>
+                     <option value="avg">Highest rated</option>
+                     <option value="count">Most rated</option>
+                     <option value="title">Title A–Z</option>
+                  </select>
+                  <div style="flex:1"></div>
+                  <div class="small">Show verified-only</div>
+                  <input type="checkbox" id="verifiedOnly" />
+               </div>
+               <div class="movie-list" id="movieList" aria-live="polite"></div>
+            </div>
+            <div style="height:12px"></div>
+            <!-- Old
+               <div class="card" id="selectedCard" aria-hidden="true" style="display:none">
+                 <strong id="selectedTitle">Selected</strong>
+                 <div class="small" id="selectedSubtitle">Movie info</div>
+                 <div style="height:12px"></div>
+               
+                 <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
+                   <div class="small">Signed in as:</div>
+                   <div id="signedInAs" class="pill" style="padding:6px 10px;background:rgba(255,255,255,0.03);border-radius:999px"></div>
+                 </div>
+               
+                 <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px">
+                   <div class="small">Your rating:</div>
+                   <div id="ratingStars" class="stars" role="radiogroup" aria-label="Rating stars"></div>
+                   <div style="flex:1"></div>
+                   <button id="submitRatingBtn">Submit</button>
+                 </div>
+               
+                 <textarea id="comment" placeholder="Optional comment (public)"></textarea>
+               
+                 <div style="height:12px"></div>
+               
+                 <div style="display:flex;gap:12px;align-items:center">
+                   <div><div class="avg" id="avgScore">—</div> <div class="small">avg</div></div>
+                   <div class="small" id="ratingCount">— ratings</div>
+                   <div style="flex:1"></div>
+                   <button id="deleteMovie" class="ghost">Delete movie (admin)</button>
+                 </div>
+               
+                 <div style="height:12px"></div>
+                 <div id="breakdown" class="small"></div>
+               </div>
+               -->
+         </main>
+         <!-- Right column -->
+         <aside class="right">
+            <div class="card">
+               <strong>Top Raters</strong>
+               <div class="small">Most contributions (live)</div>
+               <div style="height:12px"></div>
+               <div class="top-raters" id="topRaters"></div>
+               <div style="height:12px"></div>
+               <div class="small">How verification works:</div>
+               <pre class="small" style="white-space:pre-wrap">• Sign in with Google.
 • Admins add users to database node /verifiedUsers (UID or email).
 • Users listed there show a ✔ verified badge when signed in.
 • You can edit /verifiedUsers in Firebase Console → Realtime Database.</pre>
-    </div>
-
-    <div style="height:12px"></div>
-
-    <div class="card">
-      <strong>Additional Information</strong>
-      <div style="height:8px"></div>
-      <ul class="small" style="margin:0;padding-left:18px">
-        <li>Something</li>
-        <li>Some code: <code>hello world</code>.</li>
-        <li>Something</li>
-      </ul>
-    </div>
-  </aside>
-
-  <footer>
-    © 2025 Movie Ratings • All Rights Reserved
-  </footer>
-</div>
-
-<script type="module">
-/* ============================
-   MovieRatings — Full site
-   - Uses Firebase Realtime Database + Google Auth
-   - Data model (Realtime DB):
-     /movies/{movieId} = { id, title, year, slug, createdAt }
-     /ratings/{movieId}/{ratingId} = { uid, displayName, email, score, comment, createdAt, verified }
-     /raterIndex/{uid} = { displayName, email, count }
-     /verifiedUsers/{uidOrSafeEmail}: true   (managed by admin)
-   ============================ */
-
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
-import { getDatabase, ref, push, set, onValue, child, get, remove, query, orderByChild, limitToLast, update } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-database.js";
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
-
-/* -------------------------
-   === YOUR FIREBASE CONFIG
-   (copied exactly as you provided)
-   ------------------------- */
-const firebaseConfig = {
-  apiKey: "AIzaSyDPcQhADbFJzw54YLCMPKreZKKLmL1SRW8",
-  authDomain: "the-movie-ratings.firebaseapp.com",
-  databaseURL: "https://the-movie-ratings-default-rtdb.firebaseio.com",
-  projectId: "the-movie-ratings",
-  storageBucket: "the-movie-ratings.firebasestorage.app",
-  messagingSenderId: "208532935279",
-  appId: "1:208532935279:web:875fc444e712c75667b39a",
-  measurementId: "G-6582T4SZKR"
-};
-/* ------------------------- */
-
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
-const auth = getAuth(app);
-const provider = new GoogleAuthProvider();
-
-/* -------------------------
-   Utilities
-   ------------------------- */
-const uid = () => Math.random().toString(36).slice(2,9);
-const nowISO = () => new Date().toISOString();
-const slugify = s => s.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'');
-const escapeHtml = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-
-/* -------------------------
-   DOM refs
-   ------------------------- */
-const refs = {
-  signInBtn: document.getElementById('signInBtn'),
-  signOutBtn: document.getElementById('signOutBtn'),
-  signedInControls: document.getElementById('signedInControls'),
-  signedOutControls: document.getElementById('signedOutControls'),
-  userName: document.getElementById('userName'),
-  verifiedBadge: document.getElementById('verifiedBadge'),
-  addTitle: document.getElementById('newTitle'),
-  addYear: document.getElementById('newYear'),
-  addBtn: document.getElementById('addMovieBtn'),
-  search: document.getElementById('searchInput'),
-  sort: document.getElementById('sortSelect'),
-  verifiedOnly: document.getElementById('verifiedOnly'),
-  movieList: document.getElementById('movieList'),
-  selectedCard: document.getElementById('selectedCard'),
-  selectedTitle: document.getElementById('selectedTitle'),
-  selectedSubtitle: document.getElementById('selectedSubtitle'),
-  ratingStars: document.getElementById('ratingStars'),
-  submitRatingBtn: document.getElementById('submitRatingBtn'),
-  comment: document.getElementById('comment'),
-  avgScore: document.getElementById('avgScore'),
-  ratingCount: document.getElementById('ratingCount'),
-  breakdown: document.getElementById('breakdown'),
-  deleteMovieBtn: document.getElementById('deleteMovie'),
-  topRaters: document.getElementById('topRaters'),
-  signedInAs: document.getElementById('signedInAs'),
-};
-
-/* -------------------------
-   App state
-   ------------------------- */
-let currentUser = null;        // firebase user
-let currentVerified = {};     // cached verified users map
-let selectedMovieId = null;
-let pendingRating = 5;
-
-/* -------------------------
-   Auth
-   ------------------------- */
-refs.signInBtn.addEventListener('click', async () => {
-  try {
-    await signInWithPopup(auth, provider);
-  } catch (e) {
-    console.error(e);
-    alert('Sign-in failed: ' + e.message);
-  }
-});
-refs.signOutBtn.addEventListener('click', async ()=> {
-  await signOut(auth);
-});
-
-onAuthStateChanged(auth, user => {
-  currentUser = user;
-  if (user) {
-    refs.signedOutControls.style.display = 'none';
-    refs.signedInControls.style.display = 'flex';
-    refs.userName.textContent = user.displayName || user.email || user.uid;
-    refs.signedInAs.textContent = (user.displayName || user.email || user.uid);
-    checkVerified(user).then(v => {
-      renderVerifiedBadge(v);
-    });
-  } else {
-    refs.signedOutControls.style.display = 'flex';
-    refs.signedInControls.style.display = 'none';
-    refs.userName.textContent = '—';
-    refs.signedInAs.textContent = '';
-    renderVerifiedBadge(false);
-  }
-});
-
-/* -------------------------
-   Fetch verified list (cached)
-   Admins: add entries under /verifiedUsers in DB:
-     e.g. /verifiedUsers/uid_or_safe_email: true
-   ------------------------- */
-function watchVerifiedList() {
-  const vRef = ref(db, 'verifiedUsers');
-  onValue(vRef, snapshot => {
-    const val = snapshot.val() || {};
-    currentVerified = val;
-    // update signed-in badge if needed
-    if (currentUser) checkVerified(currentUser).then(v => renderVerifiedBadge(v));
-  });
-}
-watchVerifiedList();
-
-async function checkVerified(user) {
-  if (!user) return false;
-  const uidKey = user.uid;
-  const safeEmailKey = (user.email || '').replace('.', '_dot_'); // simple safe version for emails if used as keys
-  // check in cached map
-  if (currentVerified[uidKey]) return true;
-  if (currentVerified[safeEmailKey]) return true;
-  // also allow storing raw emails as keys (some admins do)
-  if (currentVerified[user.email]) return true;
-  return false;
-}
-
-function renderVerifiedBadge(isVerified) {
-  refs.verifiedBadge.innerHTML = isVerified ? '<div class="badge">✔ verified</div>' : '';
-}
-
-/* -------------------------
-   Movies & Ratings (Realtime)
-   ------------------------- */
-
-function movieRef(movieId){ return ref(db, `movies/${movieId}`); }
-function moviesRoot(){ return ref(db, 'movies'); }
-function ratingsRoot(movieId){ return ref(db, `ratings/${movieId}`); }
-function raterIndexRef(uid){ return ref(db, `raterIndex/${uid}`); }
-
-/* Utility: read all movies once (we also attach listeners) */
-function listenMovies() {
-  const mRef = moviesRoot();
-  onValue(mRef, snapshot => {
-    const val = snapshot.val() || {};
-    // convert to array
-    const arr = Object.values(val);
-    renderMovieList(arr);
-  });
-}
-listenMovies();
-
-/* Utility: watch ratings per movie by setting onValue when a movie is selected */
-const ratingsListeners = {}; // movieId -> unsubscribe handled implicitly by firebase onValue
-
-function attachRatingsListener(movieId) {
-  // avoid duplicate listener (we can rely on one global movies listener to update movies, but ratings are per-movie)
-  const rRef = ratingsRoot(movieId);
-  onValue(rRef, snapshot => {
-    // when ratings change, if current selected is movieId, update selected stats
-    if (selectedMovieId === movieId) updateSelectedStats(movieId, snapshot.val());
-    // update top raters globally
-    updateTopRaters();
-    // also re-render list (avg/count shown on rows) by re-reading movies & computing aggregate live
-    // we rely on the movie list listener for re-render; to ensure averages update, re-query movies for UI refresh
-    // (simple approach: call fetchAllMovies once)
-    // but we keep it light — renderMovieList recalculates via computeStats using ratings fetched separately on demand
-    // (see renderMovieList)
-  });
-}
-
-/* Add movie */
-refs.addBtn.addEventListener('click', async () => {
-  const title = refs.addTitle.value.trim();
-  const year = refs.addYear.value.trim();
-  if (!title) return alert('Please enter a movie title.');
-  const slug = slugify(title + (year ? '-' + year : ''));
-  // create a deterministic id using slug (safe)
-  const id = slug;
-  const mRef = movieRef(id);
-  const snapshot = await get(mRef);
-  if (!snapshot.exists()) {
-    await set(mRef, { id, title, year, slug, createdAt: nowISO() });
-  }
-  // ensure we have rating listener
-  attachRatingsListener(id);
-  selectMovie(id);
-  refs.addTitle.value = ''; refs.addYear.value = '';
-});
-
-/* Delete movie (admin) - only allow if signed-in and isVerified (admin can be managed manually) */
-refs.deleteMovieBtn.addEventListener('click', async () => {
-  if (!selectedMovieId) return;
-  if (!currentUser) return alert('Sign in as an admin to delete movies.');
-  const verified = await checkVerified(currentUser);
-  if (!verified) return alert('Only verified admins may delete movies.');
-  if (!confirm('Delete movie and all its ratings? This cannot be undone.')) return;
-  await remove(movieRef(selectedMovieId));
-  await remove(ratingsRoot(selectedMovieId));
-  selectedMovieId = null;
-  refs.selectedCard.style.display = 'none';
-});
-
-/* Render movie list (we'll compute averages by fetching ratings snapshot for each movie) */
-async function renderMovieList(movieArr) {
-  const q = refs.search.value.trim().toLowerCase();
-  const onlyVerified = refs.verifiedOnly.checked;
-  let arr = movieArr.slice();
-  if (q) arr = arr.filter(m => (m.title + ' ' + (m.year||'')).toLowerCase().includes(q));
-  // For performance: compute stats by fetching ratings snapshot for each movie in parallel with Promise.all
-  const withStats = await Promise.all(arr.map(async m => {
-    const ratingsSnap = await get(ratingsRoot(m.id));
-    const ratings = ratingsSnap.val() || {};
-    const vals = Object.values(ratings).map(r=>r.score || 0);
-    const count = vals.length;
-    const avg = count ? Math.round((vals.reduce((a,b)=>a+b,0)/count)*100)/100 : 0;
-    const breakdown = {};
-    for (let i=1;i<=10;i++) breakdown[i] = 0;
-    Object.values(ratings).forEach(r => { breakdown[r.score] = (breakdown[r.score]||0)+1; });
-    const hasVerified = Object.values(ratings).some(r => r.verified);
-    return {...m, stats:{avg,count,breakdown,hasVerified}};
-  }));
-  // Filter verified-only if requested
-  if (onlyVerified) arr = withStats.filter(m=>m.stats.hasVerified);
-  // Sorting
-  const sort = refs.sort.value;
-  withStats.sort((a,b) => {
-    if (sort === 'recent') return new Date(b.createdAt) - new Date(a.createdAt);
-    if (sort === 'avg') return (b.stats.avg||0) - (a.stats.avg||0);
-    if (sort === 'count') return (b.stats.count||0) - (a.stats.count||0);
-    if (sort === 'title') return a.title.localeCompare(b.title);
-    return 0;
-  });
-  // Render
-  refs.movieList.innerHTML = '';
-  if (withStats.length === 0) {
-    refs.movieList.innerHTML = '<div class="small" style="padding:12px">No movies yet. Add one above.</div>';
-    return;
-  }
-  for (const m of withStats) {
-    const el = document.createElement('div');
-    el.className = 'movie-row card';
-    el.innerHTML = `
-      <div class="poster" aria-hidden="true">${escapeHtml(m.title.split(' ').map(s=>s[0]).slice(0,2).join(''))}</div>
-      <div class="meta">
-        <div class="title-row">
-          <div style="min-width:0">
-            <div class="movie-title">${escapeHtml(m.title)} ${m.year?'<span class="small">('+escapeHtml(m.year)+')</span>':''}</div>
-            <div class="small">Added ${new Date(m.createdAt).toLocaleString()}</div>
-          </div>
-          <div style="text-align:right">
-            <div class="avg">${m.stats.count ? m.stats.avg : '—'}</div>
-            <div class="small">${m.stats.count} ratings</div>
-          </div>
-        </div>
+            </div>
+            <div style="height:12px"></div>
+            <div class="card">
+               <strong>Additional Information</strong>
+               <div style="height:8px"></div>
+               <ul class="small" style="margin:0;padding-left:18px">
+                  <li>Something</li>
+                  <li>Some code: <code>hello world</code>.</li>
+                  <li>Something</li>
+               </ul>
+            </div>
+         </aside>
+         <footer>
+            © 2025 Movie Ratings • All Rights Reserved
+         </footer>
       </div>
-    `;
-    el.addEventListener('click', () => {
-      selectMovie(m.id);
-      attachRatingsListener(m.id);
-    });
-    refs.movieList.appendChild(el);
-  }
-}
-
-/* Select movie */
-async function selectMovie(id) {
-  selectedMovieId = id;
-  const snap = await get(movieRef(id));
-  const m = snap.val();
-  if (!m) return;
-
-  refs.selectedCard.style.display = '';
-  refs.selectedCard.setAttribute('aria-hidden', 'false');
-  refs.selectedTitle.textContent = m.title + (m.year ? ' (' + m.year + ')' : '');
-  refs.selectedSubtitle.textContent = 'Added ' + new Date(m.createdAt).toLocaleString();
-
-  attachRatingsListener(id);
-
-  // ⬇️ Fetch existing ratings
-  const ratingsSnap = await get(ratingsRoot(id));
-
-  // ✅ PREVENT DUPLICATE RATINGS HERE
-  const ratings = ratingsSnap.val() || {};
-  const existing = Object.values(ratings).find(r => r.uid === currentUser?.uid);
-
-  if (existing) {
-    pendingRating = existing.score;
-    refs.comment.value = existing.comment || '';
-  } else {
-    pendingRating = 5; // default
-    refs.comment.value = '';
-  }
-
-  // Re-render stars showing either existing rating or default
-  renderStars(refs.ratingStars, v => pendingRating = v, pendingRating);
-
-  // Finally update stats
-  updateSelectedStats(id, ratingsSnap.val());
-}
-
-/* Stars widget */
-function renderStars(container, onSelect, value=8) {
-  container.innerHTML = '';
-  for (let i=1;i<=10;i++){
-    const s = document.createElement('div');
-    s.className = 'star ' + (i <= value ? 'on' : '');
-    s.tabIndex = 0;
-    s.setAttribute('role','radio');
-    s.setAttribute('aria-checked', i===value ? 'true' : 'false');
-    s.title = i + '/10';
-    s.textContent = '★';
-    s.addEventListener('click', ()=>{ onSelect(i); renderStars(container,onSelect,i); });
-    s.addEventListener('keydown', (e)=>{ if (e.key === 'Enter' || e.key === ' ') { onSelect(i); renderStars(container,onSelect,i); } });
-    container.appendChild(s);
-  }
-}
-
-/* Update selected stats UI (given ratings data) */
-function updateSelectedStats(movieId, ratingsVal) {
-  const ratings = ratingsVal || {};
-  const values = Object.values(ratings).map(r => r.score || 0);
-  const count = values.length;
-  const avg = count ? Math.round((values.reduce((a,b)=>a+b,0)/count)*100)/100 : 0;
-  refs.avgScore.textContent = count ? avg : '—';
-  refs.ratingCount.textContent = (count) + ' ratings';
-  // breakdown UI
-  let html = '<div style="display:flex;gap:8px;flex-wrap:wrap">';
-  const breakdown = {};
-  for (let i=1;i<=10;i++) breakdown[i] = 0;
-  Object.values(ratings).forEach(r => breakdown[r.score] = (breakdown[r.score]||0)+1);
-  for (let i=10;i>=1;i--) {
-    const pct = count ? Math.round((breakdown[i]/count)*100) : 0;
-    html += `<div class="badge" style="opacity:0.95">${i} • ${pct}%</div>`;
-  }
-  html += '</div>';
-  refs.breakdown.innerHTML = html;
-}
-
-/* Submit rating — update if existing */
-refs.submitRatingBtn.addEventListener('click', async () => {
-  if (!currentUser) return alert('Please sign in first.');
-  if (!selectedMovieId) return alert('Please select a movie.');
-  if (!pendingRating || pendingRating < 1 || pendingRating > 10)
-    return alert('Select a rating between 1–10.');
-
-  const comment = refs.comment.value.trim();
-  const ratingsRef = ratingsRoot(selectedMovieId);
-
-  // 1️⃣ Get existing ratings for this movie
-  const snapshot = await get(ratingsRef);
-  const ratings = snapshot.val() || {};
-  const existingKey = Object.keys(ratings).find(
-    k => ratings[k].uid === currentUser.uid
-  );
-
-  // 2️⃣ Prepare new/updated rating data
-  const verified = await checkVerified(currentUser);
-  const ratingData = {
-    uid: currentUser.uid,
-    displayName: currentUser.displayName || currentUser.email || currentUser.uid,
-    email: currentUser.email || '',
-    score: pendingRating,
-    comment,
-    createdAt: nowISO(),
-    verified
-  };
-
-  if (existingKey) {
-    // 🔁 Update existing rating instead of blocking
-    await update(child(ratingsRef, existingKey), ratingData);
-    alert('Your previous rating has been updated!');
-  } else {
-    // 🆕 New rating
-    const ratingId = uid();
-    await set(child(ratingsRef, ratingId), ratingData);
-
-    // 3️⃣ Update rater index count (only on first rating for a movie)
-    const rIndexRef = raterIndexRef(currentUser.uid);
-    const rIndexSnap = await get(rIndexRef);
-    const oldCount = (rIndexSnap.val() && rIndexSnap.val().count) || 0;
-    await set(rIndexRef, {
-      displayName: currentUser.displayName || currentUser.email || currentUser.uid,
-      email: currentUser.email || '',
-      count: oldCount + 1
-    });
-
-    alert('Your rating has been submitted!');
-  }
-
-  refs.comment.value = '';
-});
-
-/* Top raters: compute from raterIndex node */
-function updateTopRaters() {
-  const rRef = ref(db, 'raterIndex');
-  onValue(rRef, snapshot => {
-    const val = snapshot.val() || {};
-    const arr = Object.entries(val).map(([uid, data]) => ({ uid, ...data }));
-    arr.sort((a,b) => (b.count||0) - (a.count||0));
-    refs.topRaters.innerHTML = '';
-    if (arr.length === 0) {
-      refs.topRaters.innerHTML = '<div class="small">No raters yet.</div>';
-      return;
-    }
-    arr.slice(0,8).forEach(r => {
-      const el = document.createElement('div');
-      el.className = 'rater';
-      el.innerHTML = `<div class="avatar">${escapeHtml((r.displayName||r.email||r.uid).slice(0,2).toUpperCase())}</div>
-      <div style="flex:1">
-        <div style="font-weight:700">${escapeHtml(r.displayName || r.email || r.uid)}</div>
-        <div class="small">${r.count || 0} ratings</div>
-      </div>
-      <div>${currentVerified[r.uid] || currentVerified[(r.email||'').replace('.', '_dot_')] || currentVerified[r.email] ? '<div class="badge">✔</div>' : ''}</div>`;
-      refs.topRaters.appendChild(el);
-    });
-  });
-}
-updateTopRaters();
-
-/* live search/sort handlers */
-refs.search.addEventListener('input', async () => { const mSnap = await get(moviesRoot()); renderMovieList(Object.values(mSnap.val()||{})); });
-refs.sort.addEventListener('change', async () => { const mSnap = await get(moviesRoot()); renderMovieList(Object.values(mSnap.val()||{})); });
-refs.verifiedOnly.addEventListener('change', async () => { const mSnap = await get(moviesRoot()); renderMovieList(Object.values(mSnap.val()||{})); });
-
-/* Helper: initial seed movies (optional) */
-async function seedExamples() {
-  const mSnap = await get(moviesRoot());
-  if (!mSnap.exists()) {
-    const sample = [
-      { id: 'inception', title: 'Inception', year: '2010', slug: 'inception', createdAt: nowISO() },
-      { id: 'interstellar', title: 'Interstellar', year: '2014', slug: 'interstellar', createdAt: nowISO() },
-      { id: 'the-matrix', title: 'The Matrix', year: '1999', slug: 'the-matrix', createdAt: nowISO() }
-    ];
-    for (const s of sample) await set(movieRef(s.id), s);
-  }
-}
-// Uncomment to auto-seed on an empty DB:
-// seedExamples();
-
-/* Initial rendering: fetch movies and render */
-(async function init() {
-  const mSnap = await get(moviesRoot());
-  renderMovieList(Object.values(mSnap.val()||{}));
-})();
-
-/* Misc: allow enter to add movie */
-refs.addTitle.addEventListener('keydown', (e)=>{ if (e.key === 'Enter') refs.addBtn.click(); });
-
-/* Small safety: if user visits with no DB rules set for public writes, they may still write in test mode. 
-   Secure with proper rules when ready. */
-
-</script>
-</body>
+      <script type="module">
+         /* ============================
+            MovieRatings — Updated: inline expandable panels + explicit "Leave a rating" button
+            Replace the previous <script type="module"> block entirely with this block.
+            ============================ */
+         
+         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+         import { getDatabase, ref, push, set, onValue, child, get, remove, query, orderByChild, limitToLast, update } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-database.js";
+         import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
+         
+         /* -------------------------
+            YOUR FIREBASE CONFIG
+            ------------------------- */
+         const firebaseConfig = {
+           apiKey: "AIzaSyDPcQhADbFJzw54YLCMPKreZKKLmL1SRW8",
+           authDomain: "the-movie-ratings.firebaseapp.com",
+           databaseURL: "https://the-movie-ratings-default-rtdb.firebaseio.com",
+           projectId: "the-movie-ratings",
+           storageBucket: "the-movie-ratings.firebasestorage.app",
+           messagingSenderId: "208532935279",
+           appId: "1:208532935279:web:875fc444e712c75667b39a",
+           measurementId: "G-6582T4SZKR"
+         };
+         
+         const app = initializeApp(firebaseConfig);
+         const db = getDatabase(app);
+         const auth = getAuth(app);
+         const provider = new GoogleAuthProvider();
+         
+         /* Utilities */
+         const uid = () => Math.random().toString(36).slice(2,9);
+         const nowISO = () => new Date().toISOString();
+         const slugify = s => s.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'');
+         const escapeHtml = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+         
+         /* DOM refs (unchanged top-level ones) */
+         const refs = {
+           signInBtn: document.getElementById('signInBtn'),
+           signOutBtn: document.getElementById('signOutBtn'),
+           signedInControls: document.getElementById('signedInControls'),
+           signedOutControls: document.getElementById('signedOutControls'),
+           userName: document.getElementById('userName'),
+           verifiedBadge: document.getElementById('verifiedBadge'),
+           addTitle: document.getElementById('newTitle'),
+           addYear: document.getElementById('newYear'),
+           addBtn: document.getElementById('addMovieBtn'),
+           search: document.getElementById('searchInput'),
+           sort: document.getElementById('sortSelect'),
+           verifiedOnly: document.getElementById('verifiedOnly'),
+           movieList: document.getElementById('movieList'),
+           // removed fixed selectedCard references — we'll use dynamic panels inserted under rows
+           avgScore: document.getElementById('avgScore'), // (these are no longer required, left if you want them elsewhere)
+           ratingCount: document.getElementById('ratingCount'),
+           breakdown: document.getElementById('breakdown'),
+           deleteMovieBtn: document.getElementById('deleteMovie'),
+           topRaters: document.getElementById('topRaters'),
+           signedInAs: document.getElementById('signedInAs'),
+         };
+         
+         /* App state */
+         let currentUser = null;
+         let currentVerified = {};
+         let ratingsListeners = {}; // movieId -> listener
+         let expandedFor = null;    // movieId currently expanded
+         let expandedEl = null;     // DOM element for the expanded card
+         let pendingRating = 5;
+         
+         /* Auth (unchanged) */
+         refs.signInBtn.addEventListener('click', async () => {
+           try { await signInWithPopup(auth, provider); } catch (e) { console.error(e); alert('Sign-in failed: ' + e.message); }
+         });
+         refs.signOutBtn.addEventListener('click', async ()=> { await signOut(auth); });
+         
+         onAuthStateChanged(auth, user => {
+           currentUser = user;
+           if (user) {
+             refs.signedOutControls.style.display = 'none';
+             refs.signedInControls.style.display = 'flex';
+             refs.userName.textContent = user.displayName || user.email || user.uid;
+             refs.signedInAs.textContent = (user.displayName || user.email || user.uid);
+             checkVerified(user).then(v => renderVerifiedBadge(v));
+           } else {
+             refs.signedOutControls.style.display = 'flex';
+             refs.signedInControls.style.display = 'none';
+             refs.userName.textContent = '—';
+             refs.signedInAs.textContent = '';
+             renderVerifiedBadge(false);
+           }
+         });
+         
+         /* Verified watchers (unchanged) */
+         function watchVerifiedList() {
+           const vRef = ref(db, 'verifiedUsers');
+           onValue(vRef, snapshot => {
+             currentVerified = snapshot.val() || {};
+             if (currentUser) checkVerified(currentUser).then(v => renderVerifiedBadge(v));
+           });
+         }
+         watchVerifiedList();
+         
+         async function checkVerified(user) {
+           if (!user) return false;
+           const uidKey = user.uid;
+           const safeEmailKey = (user.email || '').replace('.', '_dot_');
+           if (currentVerified[uidKey]) return true;
+           if (currentVerified[safeEmailKey]) return true;
+           if (currentVerified[user.email]) return true;
+           return false;
+         }
+         function renderVerifiedBadge(isVerified) {
+           refs.verifiedBadge.innerHTML = isVerified ? '<div class="badge">✔ verified</div>' : '';
+         }
+         
+         /* DB helpers */
+         function movieRef(movieId){ return ref(db, `movies/${movieId}`); }
+         function moviesRoot(){ return ref(db, 'movies'); }
+         function ratingsRoot(movieId){ return ref(db, `ratings/${movieId}`); }
+         function raterIndexRef(uid){ return ref(db, `raterIndex/${uid}`); }
+         
+         /* Listen movies (unchanged overall) */
+         function listenMovies() {
+           const mRef = moviesRoot();
+           onValue(mRef, snapshot => {
+             const val = snapshot.val() || {};
+             renderMovieList(Object.values(val));
+           });
+         }
+         listenMovies();
+         
+         /* Attach ratings listener for a movie — keeps expanded UI live */
+         function attachRatingsListener(movieId) {
+           if (ratingsListeners[movieId]) return; // already listening
+           const rRef = ratingsRoot(movieId);
+           const unsub = onValue(rRef, snapshot => {
+             // If expanded for this movie, update the panel's stats & rating list
+             if (expandedFor === movieId) updateExpandedPanel(movieId, snapshot.val());
+             // update top raters
+             updateTopRaters();
+           });
+           // save a marker (firebase onValue returns an unsubscribe function in modular SDK? to keep simple, store truthy)
+           ratingsListeners[movieId] = true;
+         }
+         
+         /* Add movie (unchanged except we scroll to it) */
+         refs.addBtn.addEventListener('click', async () => {
+           const title = refs.addTitle.value.trim();
+           const year = refs.addYear.value.trim();
+           if (!title) return alert('Please enter a movie title.');
+           const slug = slugify(title + (year ? '-' + year : ''));
+           const id = slug;
+           const mRef = movieRef(id);
+           const snapshot = await get(mRef);
+           if (!snapshot.exists()) {
+             await set(mRef, { id, title, year, slug, createdAt: nowISO() });
+           }
+           attachRatingsListener(id);
+           // expand newly added movie once list refreshes (we'll rely on the normal onValue that re-renders)
+           refs.addTitle.value = ''; refs.addYear.value = '';
+         });
+         
+         /* Delete movie (unchanged except if expanded it closes) */
+         refs.deleteMovieBtn && refs.deleteMovieBtn.addEventListener('click', async () => {
+           if (!expandedFor) return alert('Select a movie first.');
+           if (!currentUser) return alert('Sign in as an admin to delete movies.');
+           const verified = await checkVerified(currentUser);
+           if (!verified) return alert('Only verified admins may delete movies.');
+           if (!confirm('Delete movie and all its ratings? This cannot be undone.')) return;
+           await remove(movieRef(expandedFor));
+           await remove(ratingsRoot(expandedFor));
+           closeExpandedPanel();
+         });
+         
+         /* Render movie list — now store data-movie-id and create rows that can expand */
+         async function renderMovieList(movieArr) {
+           const q = refs.search.value.trim().toLowerCase();
+           const onlyVerified = refs.verifiedOnly.checked;
+           let arr = (movieArr||[]).slice();
+           if (q) arr = arr.filter(m => (m.title + ' ' + (m.year||'')).toLowerCase().includes(q));
+         
+           // compute stats in parallel (same approach)
+           const withStats = await Promise.all(arr.map(async m => {
+             const ratingsSnap = await get(ratingsRoot(m.id));
+             const ratings = ratingsSnap.val() || {};
+             const vals = Object.values(ratings).map(r=>r.score || 0);
+             const count = vals.length;
+             const avg = count ? Math.round((vals.reduce((a,b)=>a+b,0)/count)*100)/100 : 0;
+             const breakdown = {};
+             for (let i=1;i<=10;i++) breakdown[i] = 0;
+             Object.values(ratings).forEach(r => { breakdown[r.score] = (breakdown[r.score]||0)+1; });
+             const hasVerified = Object.values(ratings).some(r => r.verified);
+             return {...m, stats:{avg,count,breakdown,hasVerified}};
+           }));
+         
+           // filter & sort
+           let final = withStats;
+           if (onlyVerified) final = final.filter(m => m.stats.hasVerified);
+           const sort = refs.sort.value;
+           final.sort((a,b) => {
+             if (sort === 'recent') return new Date(b.createdAt) - new Date(a.createdAt);
+             if (sort === 'avg') return (b.stats.avg||0) - (a.stats.avg||0);
+             if (sort === 'count') return (b.stats.count||0) - (a.stats.count||0);
+             if (sort === 'title') return a.title.localeCompare(b.title);
+             return 0;
+           });
+         
+           refs.movieList.innerHTML = '';
+           if (final.length === 0) {
+             refs.movieList.innerHTML = '<div class="small" style="padding:12px">No movies yet. Add one above.</div>';
+             return;
+           }
+         
+           for (const m of final) {
+             // Movie row
+             const row = document.createElement('div');
+             row.className = 'movie-row card';
+             row.setAttribute('data-movie-id', m.id);
+             row.innerHTML = `
+               <div class="poster" aria-hidden="true">${escapeHtml(m.title.split(' ').map(s=>s[0]).slice(0,2).join(''))}</div>
+               <div class="meta">
+                 <div class="title-row">
+                   <div style="min-width:0">
+                     <div class="movie-title">${escapeHtml(m.title)} ${m.year?'<span class="small">('+escapeHtml(m.year)+')</span>':''}</div>
+                     <div class="small">Added ${new Date(m.createdAt).toLocaleString()}</div>
+                   </div>
+                   <div style="text-align:right">
+                     <div class="avg">${m.stats.count ? m.stats.avg : '—'}</div>
+                     <div class="small">${m.stats.count} ratings</div>
+                   </div>
+                 </div>
+               </div>
+             `;
+             // clicking toggles expand under this row
+             row.addEventListener('click', (e) => {
+               // If clicked inside the expanded panel's controls (we'll prevent bubbling if needed), ignore.
+               const id = m.id;
+               // If clicking the row that is already expanded, collapse it
+               if (expandedFor === id) { closeExpandedPanel(); return; }
+               // else open expand under this row
+               openExpandedUnderRow(row, m);
+             });
+         
+             refs.movieList.appendChild(row);
+         
+             // If this movie is the one expanded, re-insert the expanded element after this row so DOM order stays correct
+             if (expandedFor === m.id && expandedEl) {
+               refs.movieList.appendChild(expandedEl);
+             }
+           }
+         }
+         
+         /* Create expanded panel DOM for a movie (returns element) */
+         function createExpandedDOM(movie) {
+           const container = document.createElement('div');
+           container.className = 'card';
+           container.setAttribute('data-expanded-for', movie.id);
+         
+           // Basic structure:
+           container.innerHTML = `
+             <div style="display:flex;justify-content:space-between;align-items:center;">
+               <div>
+                 <strong class="expanded-title">${escapeHtml(movie.title)} ${movie.year ? ' ('+escapeHtml(movie.year)+')' : ''}</strong>
+                 <div class="small expanded-subtitle">Added ${new Date(movie.createdAt).toLocaleString()}</div>
+               </div>
+               <div style="text-align:right">
+                 <div class="small">Signed in as:</div>
+                 <div class="small expanded-signed-in">${escapeHtml(currentUser?.displayName || currentUser?.email || '—')}</div>
+               </div>
+             </div>
+         
+             <div style="height:12px"></div>
+         
+             <div class="expanded-stats small">
+               <!-- avg / count / breakdown are injected by updateExpandedPanel -->
+               <div style="display:flex;gap:12px;align-items:center">
+                 <div><div class="avg expanded-avg">—</div><div class="small">avg</div></div>
+                 <div class="small expanded-count">— ratings</div>
+                 <div style="flex:1"></div>
+                 <button class="ghost expanded-leave-btn">Leave a rating</button>
+               </div>
+               <div style="height:8px"></div>
+               <div class="expanded-breakdown"></div>
+             </div>
+         
+             <div style="height:12px"></div>
+         
+             <!-- Hidden rating form that appears only when user clicks "Leave a rating" -->
+             <div class="expanded-form" style="display:none;gap:8px">
+               <div style="display:flex;gap:8px;align-items:center">
+                 <div class="small">Your rating:</div>
+                 <div class="stars-container" role="radiogroup" aria-label="Rating stars"></div>
+                 <div style="flex:1"></div>
+                 <button class="ghost expanded-cancel-btn">Cancel</button>
+                 <button class="expanded-submit-btn">Submit rating</button>
+               </div>
+               <textarea class="expanded-comment" placeholder="Optional comment (public)"></textarea>
+             </div>
+         
+             <div style="height:12px"></div>
+         
+             <div class="expanded-list small" style="max-height:260px;overflow:auto;border-top:1px dashed rgba(255,255,255,0.03);padding-top:8px"></div>
+           `;
+         
+           // Wire up leave button
+           container.querySelector('.expanded-leave-btn').addEventListener('click', (e) => {
+             e.stopPropagation();
+             // If not signed in -> prompt
+             if (!currentUser) return alert('Please sign in to leave a rating.');
+             // Show form
+             container.querySelector('.expanded-form').style.display = 'flex';
+             container.querySelector('.expanded-leave-btn').style.display = 'none';
+             const starsContainer = container.querySelector('.stars-container');
+             // set pendingRating to previous user rating if exists later when we fetch ratings; for now default 5
+             pendingRating = 5;
+             renderStars(starsContainer, v => pendingRating = v, pendingRating);
+           });
+         
+           // Cancel rating
+           container.querySelector('.expanded-cancel-btn').addEventListener('click', (ev) => {
+             ev.stopPropagation();
+             container.querySelector('.expanded-form').style.display = 'none';
+             container.querySelector('.expanded-leave-btn').style.display = '';
+           });
+         
+           // Submit rating (uses dynamic elements)
+           container.querySelector('.expanded-submit-btn').addEventListener('click', async (ev) => {
+             ev.stopPropagation();
+             const movieId = container.getAttribute('data-expanded-for');
+             if (!currentUser) return alert('Please sign in first.');
+             if (!movieId) return alert('No movie selected.');
+             if (!pendingRating || pendingRating < 1 || pendingRating > 10) return alert('Select a rating between 1–10.');
+             const comment = container.querySelector('.expanded-comment').value.trim();
+             const ratingsRef = ratingsRoot(movieId);
+         
+             const snapshot = await get(ratingsRef);
+             const ratings = snapshot.val() || {};
+             const existingKey = Object.keys(ratings).find(k => ratings[k].uid === currentUser.uid);
+         
+             const verified = await checkVerified(currentUser);
+             const ratingData = {
+               uid: currentUser.uid,
+               displayName: currentUser.displayName || currentUser.email || currentUser.uid,
+               email: currentUser.email || '',
+               score: pendingRating,
+               comment,
+               createdAt: nowISO(),
+               verified
+             };
+         
+             if (existingKey) {
+               await update(child(ratingsRef, existingKey), ratingData);
+               alert('Your previous rating has been updated!');
+             } else {
+               const ratingId = uid();
+               await set(child(ratingsRef, ratingId), ratingData);
+               const rIndexRef = raterIndexRef(currentUser.uid);
+               const rIndexSnap = await get(rIndexRef);
+               const oldCount = (rIndexSnap.val() && rIndexSnap.val().count) || 0;
+               await set(rIndexRef, {
+                 displayName: currentUser.displayName || currentUser.email || currentUser.uid,
+                 email: currentUser.email || '',
+                 count: oldCount + 1
+               });
+               alert('Your rating has been submitted!');
+             }
+         
+             // hide form after submit
+             container.querySelector('.expanded-form').style.display = 'none';
+             container.querySelector('.expanded-leave-btn').style.display = '';
+             container.querySelector('.expanded-comment').value = '';
+           });
+         
+           return container;
+         }
+         
+         /* open expanded panel under a specific movie row */
+         async function openExpandedUnderRow(rowEl, movie) {
+           // close previous if any
+           closeExpandedPanel();
+         
+           // create DOM
+           const panel = createExpandedDOM(movie);
+           // insert after rowEl
+           if (rowEl.nextSibling) rowEl.parentNode.insertBefore(panel, rowEl.nextSibling);
+           else rowEl.parentNode.appendChild(panel);
+         
+           expandedFor = movie.id;
+           expandedEl = panel;
+         
+           // attach ratings listener for live updates & populate
+           attachRatingsListener(movie.id);
+           const snap = await get(ratingsRoot(movie.id));
+           updateExpandedPanel(movie.id, snap.val());
+         }
+         
+         /* update the expanded panel UI given ratings data */
+         function updateExpandedPanel(movieId, ratingsVal) {
+           if (!expandedEl || expandedFor !== movieId) return;
+           const container = expandedEl;
+           const ratings = ratingsVal || {};
+           const values = Object.values(ratings).map(r => r.score || 0);
+           const count = values.length;
+           const avg = count ? Math.round((values.reduce((a,b)=>a+b,0)/count)*100)/100 : 0;
+         
+           container.querySelector('.expanded-avg').textContent = count ? avg : '—';
+           container.querySelector('.expanded-count').textContent = (count) + ' ratings';
+         
+           // breakdown badges
+           let html = '<div style="display:flex;gap:8px;flex-wrap:wrap">';
+           const breakdown = {};
+           for (let i=1;i<=10;i++) breakdown[i] = 0;
+           Object.values(ratings).forEach(r => breakdown[r.score] = (breakdown[r.score]||0)+1);
+           for (let i=10;i>=1;i--) {
+             const pct = count ? Math.round((breakdown[i]/count)*100) : 0;
+             html += `<div class="badge" style="opacity:0.95">${i} • ${pct}%</div>`;
+           }
+           html += '</div>';
+           container.querySelector('.expanded-breakdown').innerHTML = html;
+         
+           // render ratings list (comments + names + score)
+           const listEl = container.querySelector('.expanded-list');
+           if (!listEl) return;
+           listEl.innerHTML = '';
+           const entries = Object.values(ratings).sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
+           if (entries.length === 0) {
+             listEl.innerHTML = '<div class="small">No ratings yet.</div>';
+           } else {
+             entries.forEach(r => {
+               const e = document.createElement('div');
+               e.style.padding = '8px 6px';
+               e.style.borderBottom = '1px solid rgba(255,255,255,0.02)';
+               e.innerHTML = `<div style="display:flex;align-items:center;gap:8px">
+                 <div class="avatar">${escapeHtml((r.displayName||r.email||r.uid).slice(0,2).toUpperCase())}</div>
+                 <div style="flex:1">
+                   <div style="font-weight:700">${escapeHtml(r.displayName || r.email || r.uid)} <span class="small">• ${new Date(r.createdAt).toLocaleString()}</span></div>
+                   <div class="small">Score: ${r.score}/10 ${r.verified ? '<span class="badge">✔</span>' : ''}</div>
+                   ${r.comment ? `<div style="margin-top:6px">${escapeHtml(r.comment)}</div>` : ''}
+                 </div>
+               </div>`;
+               listEl.appendChild(e);
+             });
+           }
+         
+           // If the current user has an existing rating, adjust the "Leave a rating" button behavior to open form and prefill
+           if (currentUser) {
+             const existing = Object.values(ratings).find(rr => rr.uid === currentUser.uid);
+             if (existing) {
+               // Pre-fill when they click leave: set pendingRating to existing.score and comment to existing.comment.
+               // We'll store these values in dataset for retrieval when "Leave a rating" is clicked.
+               container.querySelector('.expanded-leave-btn').dataset.prefillScore = existing.score;
+               container.querySelector('.expanded-leave-btn').dataset.prefillComment = existing.comment || '';
+             } else {
+               container.querySelector('.expanded-leave-btn').dataset.prefillScore = '';
+               container.querySelector('.expanded-leave-btn').dataset.prefillComment = '';
+             }
+           }
+         }
+         
+         /* close the expanded panel */
+         function closeExpandedPanel() {
+           if (!expandedEl) return;
+           expandedEl.remove();
+           expandedEl = null;
+           expandedFor = null;
+         }
+         
+         /* stars widget (reused by expanded panels) */
+         function renderStars(container, onSelect, value=8) {
+           container.innerHTML = '';
+           for (let i=1;i<=10;i++){
+             const s = document.createElement('div');
+             s.className = 'star ' + (i <= value ? 'on' : '');
+             s.tabIndex = 0;
+             s.setAttribute('role','radio');
+             s.setAttribute('aria-checked', i===value ? 'true' : 'false');
+             s.title = i + '/10';
+             s.textContent = '★';
+             s.addEventListener('click', ()=>{ onSelect(i); renderStars(container,onSelect,i); });
+             s.addEventListener('keydown', (e)=>{ if (e.key === 'Enter' || e.key === ' ') { onSelect(i); renderStars(container,onSelect,i); } });
+             container.appendChild(s);
+           }
+         }
+         
+         /* Top raters (unchanged) */
+         function updateTopRaters() {
+           const rRef = ref(db, 'raterIndex');
+           onValue(rRef, snapshot => {
+             const val = snapshot.val() || {};
+             const arr = Object.entries(val).map(([uid, data]) => ({ uid, ...data }));
+             arr.sort((a,b) => (b.count||0) - (a.count||0));
+             refs.topRaters.innerHTML = '';
+             if (arr.length === 0) {
+               refs.topRaters.innerHTML = '<div class="small">No raters yet.</div>';
+               return;
+             }
+             arr.slice(0,8).forEach(r => {
+               const el = document.createElement('div');
+               el.className = 'rater';
+               el.innerHTML = `<div class="avatar">${escapeHtml((r.displayName||r.email||r.uid).slice(0,2).toUpperCase())}</div>
+               <div style="flex:1">
+                 <div style="font-weight:700">${escapeHtml(r.displayName || r.email || r.uid)}</div>
+                 <div class="small">${r.count || 0} ratings</div>
+               </div>
+               <div>${currentVerified[r.uid] || currentVerified[(r.email||'').replace('.', '_dot_')] || currentVerified[r.email] ? '<div class="badge">✔</div>' : ''}</div>`;
+               refs.topRaters.appendChild(el);
+             });
+           });
+         }
+         updateTopRaters();
+         
+         /* Live search/sort handlers: re-fetch and render; keep behavior */
+         refs.search.addEventListener('input', async () => { const mSnap = await get(moviesRoot()); renderMovieList(Object.values(mSnap.val()||{})); });
+         refs.sort.addEventListener('change', async () => { const mSnap = await get(moviesRoot()); renderMovieList(Object.values(mSnap.val()||{})); });
+         refs.verifiedOnly.addEventListener('change', async () => { const mSnap = await get(moviesRoot()); renderMovieList(Object.values(mSnap.val()||{})); });
+         
+         /* Init: fetch and render */
+         (async function init() {
+           const mSnap = await get(moviesRoot());
+           renderMovieList(Object.values(mSnap.val()||{}));
+         })();
+         
+         /* Allow enter to add movie */
+         refs.addTitle.addEventListener('keydown', (e)=>{ if (e.key === 'Enter') refs.addBtn.click(); });
+         
+      </script>
+   </body>
 </html>
