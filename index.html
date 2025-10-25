@@ -107,6 +107,14 @@
          .movie-list{display:grid;gap:12px;margin-top:10px}
          .movie-row{display:flex;gap:12px;align-items:center;padding:12px;border-radius:10px;background:linear-gradient(180deg, rgba(255,255,255,0.01), transparent);cursor:pointer}
          .poster{width:72px;height:104px;border-radius:8px;background:linear-gradient(180deg,#071026,#0b1220);display:flex;align-items:center;justify-content:center;font-weight:800;color:var(--muted);font-size:20px}
+         .poster-img {
+         width: 72px;
+         height: 104px;
+         object-fit: cover;
+         border-radius: 8px;
+         flex-shrink: 0;
+         box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+         }
          .meta{flex:1;display:flex;flex-direction:column}
          .title-row{display:flex;justify-content:space-between;align-items:center;gap:8px}
          .movie-title{font-size:16px;margin:0}
@@ -156,6 +164,7 @@
                   <input type="search" id="searchInput" placeholder="Search titles..." />
                   <input type="text" id="newTitle" placeholder="Movie title (required)" />
                   <input type="text" id="newYear" placeholder="Year (optional)" />
+                  <input type="text" id="newPoster" placeholder="Poster URL (optional)" />
                   <button id="addMovieBtn">Add / Select</button>
                </div>
                <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
@@ -228,7 +237,7 @@
                <ul class="small" style="margin:0;padding-left:18px">
                   <li>Last Updated: October 25, 2025</li>
                   <a href='https://www.free-counters.org/'>www.free-Counter.org</a> <script type='text/javascript' src='https://www.freevisitorcounters.com/auth.php?id=784532d4e6654eba9bd92261f6bb3a72460355f1'></script>
-<script type="text/javascript" src="https://www.freevisitorcounters.com/en/home/counter/1423817/t/0"></script>
+                  <script type="text/javascript" src="https://www.freevisitorcounters.com/en/home/counter/1423817/t/0"></script>
                </ul>
             </div>
          </aside>
@@ -389,7 +398,8 @@
            const mRef = movieRef(id);
            const snapshot = await get(mRef);
            if (!snapshot.exists()) {
-             await set(mRef, { id, title, year, slug, createdAt: nowISO() });
+              const poster = document.getElementById('newPoster').value.trim();
+              await set(mRef, { id, title, year, slug, poster, createdAt: nowISO() });
            }
            attachRatingsListener(id);
            // expand newly added movie once list refreshes (we'll rely on the normal onValue that re-renders)
@@ -452,8 +462,12 @@
              const row = document.createElement('div');
              row.className = 'movie-row card';
              row.setAttribute('data-movie-id', m.id);
-             row.innerHTML = `
-               <div class="poster" aria-hidden="true">${escapeHtml(m.title.split(' ').map(s=>s[0]).slice(0,2).join(''))}</div>
+             const posterHtml = m.poster 
+         ? `<img src="${escapeHtml(m.poster)}" alt="Poster for ${escapeHtml(m.title)}" class="poster-img" />`
+         : `<div class="poster" aria-hidden="true">${escapeHtml(m.title.split(' ').map(s=>s[0]).slice(0,2).join(''))}</div>`;
+         
+         row.innerHTML = `
+         ${posterHtml}
                <div class="meta">
                  <div class="title-row">
                    <div style="min-width:0">
