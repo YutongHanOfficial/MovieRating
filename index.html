@@ -149,7 +149,7 @@
             <div class="card">
                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
                   <strong>Add / Find a Movie</strong>
-                  <small class="small">Live shared ratings</small>
+                  <small class="small">Leave a review!</small>
                </div>
                <div class="controls" role="group" aria-label="movie controls">
                   <input type="search" id="searchInput" placeholder="Search titles..." />
@@ -210,24 +210,24 @@
          <aside class="right">
             <div class="card">
                <strong>Top Raters</strong>
-               <div class="small">Most contributions (live)</div>
+               <div class="small">Most contributions</div>
                <div style="height:12px"></div>
                <div class="top-raters" id="topRaters"></div>
                <div style="height:12px"></div>
                <div class="small">How verification works:</div>
                <pre class="small" style="white-space:pre-wrap">• Sign in with Google.
-• Admins add users to database node /verifiedUsers (UID or email).
-• Users listed there show a ✔ verified badge when signed in.
-• You can edit /verifiedUsers in Firebase Console → Realtime Database.</pre>
+• Create high quality reviews.
+• Admins will periodically add new verified users.
+• Users listed there show a ✔ verified badge when signed in.</pre>
             </div>
             <div style="height:12px"></div>
             <div class="card">
                <strong>Additional Information</strong>
                <div style="height:8px"></div>
                <ul class="small" style="margin:0;padding-left:18px">
-                  <li>Something</li>
-                  <li>Some code: <code>hello world</code>.</li>
-                  <li>Something</li>
+                  <li>Last Updated: October 25, 2025</li>
+                  <a href='https://www.free-counters.org/'>www.free-Counter.org</a> <script type='text/javascript' src='https://www.freevisitorcounters.com/auth.php?id=784532d4e6654eba9bd92261f6bb3a72460355f1'></script>
+<script type="text/javascript" src="https://www.freevisitorcounters.com/en/home/counter/1423817/t/0"></script>
                </ul>
             </div>
          </aside>
@@ -345,7 +345,7 @@
            return false;
          }
          function renderVerifiedBadge(isVerified) {
-           refs.verifiedBadge.innerHTML = isVerified ? '<div class="badge">✔ verified</div>' : '';
+           refs.verifiedBadge.innerHTML = isVerified ? '<div class="badge">✔ Verified</div>' : '';
          }
          
          /* DB helpers */
