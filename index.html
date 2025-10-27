@@ -388,22 +388,45 @@
            ratingsListeners[movieId] = true;
          }
          
-         /* Add movie (unchanged except we scroll to it) */
+         /* Add movie — only verified users can add new movies */
          refs.addBtn.addEventListener('click', async () => {
-           const title = refs.addTitle.value.trim();
-           const year = refs.addYear.value.trim();
-           if (!title) return alert('Please enter a movie title.');
-           const slug = slugify(title + (year ? '-' + year : ''));
-           const id = slug;
-           const mRef = movieRef(id);
-           const snapshot = await get(mRef);
-           if (!snapshot.exists()) {
-              const poster = document.getElementById('newPoster').value.trim();
-              await set(mRef, { id, title, year, slug, poster, createdAt: nowISO() });
-           }
-           attachRatingsListener(id);
-           // expand newly added movie once list refreshes (we'll rely on the normal onValue that re-renders)
-           refs.addTitle.value = ''; refs.addYear.value = '';
+         const title = refs.addTitle.value.trim();
+         const year = refs.addYear.value.trim();
+         if (!title) return alert('Please enter a movie title.');
+         
+         // Require login
+         if (!currentUser) {
+         return alert('You must be signed in to add a movie.');
+         }
+         
+         // Check verification
+         const verified = await checkVerified(currentUser);
+         if (!verified) {
+         return alert('Only verified users can add new movies to the database.');
+         }
+         
+         const slug = slugify(title + (year ? '-' + year : ''));
+         const id = slug;
+         const mRef = movieRef(id);
+         const snapshot = await get(mRef);
+         
+         if (!snapshot.exists()) {
+         const poster = document.getElementById('newPoster').value.trim();
+         await set(mRef, {
+         id,
+         title,
+         year,
+         slug,
+         poster,
+         createdAt: nowISO(),
+         addedBy: currentUser.uid,
+         verifiedAdder: true
+         });
+         }
+         
+         attachRatingsListener(id);
+         refs.addTitle.value = '';
+         refs.addYear.value = '';
          });
          
          /* Delete movie (unchanged except if expanded it closes) */
