@@ -245,8 +245,8 @@
                      <label for="searchInput" class="search-label">🎬 Movie Search</label>
                      <input type="search" id="searchInput" placeholder="Search movies by title..." />
                   </div>
-                  <!-- Second Row for Adding a New Movie -->
-                  <div class="movie-add-row">
+                  <!-- Second Row for Adding a New Movie (only visible to verified users) -->
+                  <div id="addMovieSection" class="movie-add-row" style="display:none;">
                      <input type="text" id="newTitle" placeholder="Movie title (required)" />
                      <input type="text" id="newYear" placeholder="Year (optional)" />
                      <input type="text" id="newPoster" placeholder="Poster URL (optional)" />
@@ -379,6 +379,7 @@
            signedOutControls: document.getElementById('signedOutControls'),
            userName: document.getElementById('userName'),
            verifiedBadge: document.getElementById('verifiedBadge'),
+            addMovieSection: document.getElementById('addMovieSection'),
            addTitle: document.getElementById('newTitle'),
            addYear: document.getElementById('newYear'),
            addBtn: document.getElementById('addMovieBtn'),
@@ -423,13 +424,23 @@
              refs.signedInControls.style.display = 'flex';
              refs.userName.textContent = user.displayName || user.email || user.uid;
              refs.signedInAs.textContent = (user.displayName || user.email || user.uid);
-             checkVerified(user).then(v => renderVerifiedBadge(v));
+             checkVerified(user).then(v => {
+         renderVerifiedBadge(v);
+         if (v) {
+         // ✅ Show add movie section if verified
+         refs.addMovieSection.style.display = 'grid';
+         } else {
+         // 🚫 Hide add movie section if not verified
+         refs.addMovieSection.style.display = 'none';
+         }
+         });
            } else {
              refs.signedOutControls.style.display = 'flex';
              refs.signedInControls.style.display = 'none';
              refs.userName.textContent = '—';
              refs.signedInAs.textContent = '';
              renderVerifiedBadge(false);
+              refs.addMovieSection.style.display = 'none';
            }
          });
          
