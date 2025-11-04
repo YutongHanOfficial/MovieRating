@@ -252,6 +252,9 @@
                      <input type="text" id="newPoster" placeholder="Poster URL (optional)" />
                      <button id="addMovieBtn">Add / Select</button>
                   </div>
+                  <div id="notVerifiedMsg" class="small" style="display:none;color:var(--muted);margin-top:4px;">
+   Only verified users can add new movies.
+</div>
                </div>
                <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
                   <div class="small">Sort:</div>
@@ -425,15 +428,15 @@
              refs.userName.textContent = user.displayName || user.email || user.uid;
              refs.signedInAs.textContent = (user.displayName || user.email || user.uid);
              checkVerified(user).then(v => {
-         renderVerifiedBadge(v);
-         if (v) {
-         // ✅ Show add movie section if verified
-         refs.addMovieSection.style.display = 'grid';
-         } else {
-         // 🚫 Hide add movie section if not verified
-         refs.addMovieSection.style.display = 'none';
-         }
-         });
+  renderVerifiedBadge(v);
+  if (v) {
+    refs.addMovieSection.style.display = 'grid';
+    document.getElementById('notVerifiedMsg').style.display = 'none';
+  } else {
+    refs.addMovieSection.style.display = 'none';
+    document.getElementById('notVerifiedMsg').style.display = 'block';
+  }
+});
            } else {
              refs.signedOutControls.style.display = 'flex';
              refs.signedInControls.style.display = 'none';
