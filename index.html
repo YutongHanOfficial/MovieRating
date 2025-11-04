@@ -184,6 +184,10 @@
          .avatar{width:44px;height:44px;border-radius:8px;background:linear-gradient(135deg,#111827,#0b1220);display:inline-grid;place-items:center;font-weight:800;color:var(--muted)}
          footer{grid-column:1 / -1;text-align:center;margin-top:12px;color:var(--muted);font-size:13px}
          .badge{background:rgba(255,255,255,0.06);padding:4px 8px;border-radius:999px;font-weight:700;font-size:12px;color:#d9f7ff}
+         /* Edit name modal small tweaks */
+         #editNameModal .card { box-shadow: 0 8px 30px rgba(0,0,0,0.6); }
+         #editNameModal input { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); color: inherit; }
+         #editNameMsg { color: var(--accent); } /* success message color (muted by default) */
          @media (max-width:980px){.wrap{grid-template-columns:1fr;padding:12px}.right{order:3}}
       </style>
    </head>
@@ -204,6 +208,25 @@
                <div id="signedInControls" style="display:none;align-items:center;gap:8px">
                   <div class="small" id="userName">—</div>
                   <div id="verifiedBadge"></div>
+                  <!-- EDIT USERNAME BUTTON -->
+                  <button id="editNameBtn" class="ghost" title="Change your display name">Edit name</button>
+                  <!-- Inline modal / popover for editing username (hidden by default) -->
+                  <div id="editNameModal" style="display:none;position:fixed;right:20px;top:84px;z-index:9999">
+                     <div class="card" style="min-width:320px;padding:12px;">
+                        <div style="display:flex;justify-content:space-between;align-items:center">
+                           <strong>Change display name</strong>
+                           <button id="closeEditName" class="ghost" style="padding:6px 8px">×</button>
+                        </div>
+                        <div style="height:8px"></div>
+                        <input id="editNameInput" type="text" placeholder="New display name" style="width:100%;padding:8px;border-radius:8px" />
+                        <div style="height:8px"></div>
+                        <div style="display:flex;gap:8px;justify-content:flex-end">
+                           <button id="cancelEditName" class="ghost">Cancel</button>
+                           <button id="saveEditName">Save</button>
+                        </div>
+                        <div id="editNameMsg" class="small" style="margin-top:8px;color:var(--muted);display:none"></div>
+                     </div>
+                  </div>
                   <button id="signOutBtn" class="ghost">Sign out</button>
                </div>
             </div>
@@ -321,7 +344,7 @@
          
          import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
          import { getDatabase, ref, push, set, onValue, child, get, remove, query, orderByChild, limitToLast, update } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-database.js";
-         import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
+         import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
          
          /* -------------------------
             YOUR FIREBASE CONFIG
@@ -370,6 +393,13 @@
            deleteMovieBtn: document.getElementById('deleteMovie'),
            topRaters: document.getElementById('topRaters'),
            signedInAs: document.getElementById('signedInAs'),
+            editNameBtn: document.getElementById('editNameBtn'),
+         editNameModal: document.getElementById('editNameModal'),
+         editNameInput: document.getElementById('editNameInput'),
+         saveEditName: document.getElementById('saveEditName'),
+         cancelEditName: document.getElementById('cancelEditName'),
+         closeEditName: document.getElementById('closeEditName'),
+         editNameMsg: document.getElementById('editNameMsg'),
          };
          
          /* App state */
@@ -401,6 +431,107 @@
              refs.signedInAs.textContent = '';
              renderVerifiedBadge(false);
            }
+         });
+         
+         /* =========================
+         Edit display name flow
+         ========================= */
+         
+         function showEditNameModal(prefill='') {
+         refs.editNameInput.value = prefill;
+         refs.editNameMsg.style.display = 'none';
+         refs.editNameModal.style.display = 'block';
+         refs.editNameInput.focus();
+         }
+         function hideEditNameModal() {
+         refs.editNameModal.style.display = 'none';
+         refs.editNameMsg.style.display = 'none';
+         refs.editNameInput.value = '';
+         }
+         
+         /* open modal when clicking Edit button */
+         refs.editNameBtn.addEventListener('click', (e) => {
+         e.stopPropagation();
+         if (!currentUser) return alert('Sign in first to change your display name.');
+         // Prefill with current displayName
+         const current = currentUser.displayName || currentUser.email || '';
+         showEditNameModal(current);
+         });
+         
+         /* cancel/close handlers */
+         refs.cancelEditName.addEventListener('click', (e) => { e.stopPropagation(); hideEditNameModal(); });
+         refs.closeEditName.addEventListener('click', (e) => { e.stopPropagation(); hideEditNameModal(); });
+         /* clicking outside the modal should close it — small convenience */
+         document.addEventListener('click', (ev) => {
+         if (!refs.editNameModal) return;
+         if (refs.editNameModal.style.display === 'block') {
+         const rect = refs.editNameModal.getBoundingClientRect();
+         // If click is outside the modal card, close
+         if (!(ev.clientX >= rect.left && ev.clientX <= rect.right && ev.clientY >= rect.top && ev.clientY <= rect.bottom)) {
+         hideEditNameModal();
+         }
+         }
+         });
+         
+         /* Save new display name: validation -> updateProfile -> update raterIndex -> update ratings entries */
+         refs.saveEditName.addEventListener('click', async (ev) => {
+         ev.stopPropagation();
+         if (!currentUser) return alert('You must be signed in.');
+         const newName = refs.editNameInput.value.trim();
+         if (!newName) {
+         refs.editNameMsg.textContent = 'Please enter a name.';
+         refs.editNameMsg.style.display = '';
+         return;
+         }
+         if (newName.length < 2 || newName.length > 40) {
+         refs.editNameMsg.textContent = 'Name must be 2–40 characters.';
+         refs.editNameMsg.style.display = '';
+         return;
+         }
+         
+         try {
+         // 1) Update Firebase Auth profile
+         await updateProfile(auth.currentUser, { displayName: newName });
+         
+         // 2) Update raterIndex/{uid}
+         await update(ref(db, `raterIndex/${currentUser.uid}`), { displayName: newName });
+         
+         // 3) Update all ratings records for this uid across all movies
+         //    We read the movies list and then for each movie we read ratings and update matching entries.
+         const moviesSnap = await get(moviesRoot());
+         const movies = moviesSnap.val() || {};
+         const movieIds = Object.keys(movies);
+         
+         // We'll show a small message in the modal while we update
+         refs.editNameMsg.textContent = 'Saving — updating your existing ratings...';
+         refs.editNameMsg.style.display = '';
+         for (const mid of movieIds) {
+         const rRef = ratingsRoot(mid);
+         const rSnap = await get(rRef);
+         const ratings = rSnap.val() || {};
+         for (const [k, r] of Object.entries(ratings)) {
+         if (r && r.uid === currentUser.uid) {
+          // update displayName field only (do not overwrite other fields)
+          await update(child(rRef, k), { displayName: newName });
+         }
+         }
+         }
+         
+         // 4) local UI updates: refresh displayed name(s)
+         refs.userName.textContent = newName;
+         refs.signedInAs && (refs.signedInAs.textContent = newName);
+         
+         // 5) update top raters UI (calls existing helper to refresh)
+         updateTopRaters();
+         
+         refs.editNameMsg.textContent = 'Saved successfully!';
+         // hide after a short moment
+         setTimeout(() => { hideEditNameModal(); }, 900);
+         } catch (err) {
+         console.error('Failed to update display name:', err);
+         refs.editNameMsg.textContent = 'Error: ' + (err.message || err);
+         refs.editNameMsg.style.display = '';
+         }
          });
          
          /* Verified watchers (unchanged) */
