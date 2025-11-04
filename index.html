@@ -245,16 +245,13 @@
                      <label for="searchInput" class="search-label">🎬 Movie Search</label>
                      <input type="search" id="searchInput" placeholder="Search movies by title..." />
                   </div>
-                  <!-- Second Row for Adding a New Movie (only visible to verified users) -->
-                  <div id="addMovieSection" class="movie-add-row" style="display:none;">
+                  <!-- Second Row for Adding a New Movie -->
+                  <div class="movie-add-row">
                      <input type="text" id="newTitle" placeholder="Movie title (required)" />
                      <input type="text" id="newYear" placeholder="Year (optional)" />
                      <input type="text" id="newPoster" placeholder="Poster URL (optional)" />
                      <button id="addMovieBtn">Add / Select</button>
                   </div>
-                  <div id="notVerifiedMsg" class="small" style="display:none;color:var(--muted);margin-top:4px;">
-   Only verified users can add new movies.
-</div>
                </div>
                <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
                   <div class="small">Sort:</div>
@@ -382,7 +379,6 @@
            signedOutControls: document.getElementById('signedOutControls'),
            userName: document.getElementById('userName'),
            verifiedBadge: document.getElementById('verifiedBadge'),
-            addMovieSection: document.getElementById('addMovieSection'),
            addTitle: document.getElementById('newTitle'),
            addYear: document.getElementById('newYear'),
            addBtn: document.getElementById('addMovieBtn'),
@@ -427,23 +423,13 @@
              refs.signedInControls.style.display = 'flex';
              refs.userName.textContent = user.displayName || user.email || user.uid;
              refs.signedInAs.textContent = (user.displayName || user.email || user.uid);
-             checkVerified(user).then(v => {
-  renderVerifiedBadge(v);
-  if (v) {
-    refs.addMovieSection.style.display = 'grid';
-    document.getElementById('notVerifiedMsg').style.display = 'none';
-  } else {
-    refs.addMovieSection.style.display = 'none';
-    document.getElementById('notVerifiedMsg').style.display = 'block';
-  }
-});
+             checkVerified(user).then(v => renderVerifiedBadge(v));
            } else {
              refs.signedOutControls.style.display = 'flex';
              refs.signedInControls.style.display = 'none';
              refs.userName.textContent = '—';
              refs.signedInAs.textContent = '';
              renderVerifiedBadge(false);
-              refs.addMovieSection.style.display = 'none';
            }
          });
          
